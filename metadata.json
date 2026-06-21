@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Weekly Home Cleaning Checklist",
+  "description": "A printable weekly planner to track daily chores, deep cleaning goals, and monthly maintenance for a tidy home.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
