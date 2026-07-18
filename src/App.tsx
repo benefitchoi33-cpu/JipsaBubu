@@ -113,13 +113,17 @@ const getInitialStateFromUrlOrStorage = () => {
 // Robust state migration helpers to force-apply the user's requested structural modifications
 const migrateNTimesTasks = (tasks: NTimesTask[]): NTimesTask[] => {
   if (!tasks || !Array.isArray(tasks)) return INITIAL_N_TIMES_TASKS;
-  const hasToilet = tasks.some(t => t.name.replace(/\s+/g, '') === '변기청소');
+  
+  // Safe filtering: keep only valid objects with an id and a name
+  const validTasks = tasks.filter(t => t && typeof t === 'object' && t.id && typeof t.name === 'string');
+  
+  const hasToilet = validTasks.some(t => t.name.replace(/\s+/g, '') === '변기청소');
   if (!hasToilet) {
     // Check if there is an id 'ntimes_5' already
-    const hasId5 = tasks.some(t => t.id === 'ntimes_5');
+    const hasId5 = validTasks.some(t => t.id === 'ntimes_5');
     const newId = hasId5 ? `ntimes_${Date.now()}` : 'ntimes_5';
     return [
-      ...tasks,
+      ...validTasks,
       {
         id: newId,
         name: '변기 청소',
@@ -129,21 +133,28 @@ const migrateNTimesTasks = (tasks: NTimesTask[]): NTimesTask[] => {
       }
     ];
   }
-  return tasks;
+  return validTasks;
 };
 
 const migrateWeeklyTasks = (tasks: WeeklyTask[]): WeeklyTask[] => {
   if (!tasks || !Array.isArray(tasks)) return INITIAL_WEEKLY_TASKS;
-  return tasks.map(t => {
-    // If the task matches old name '변기 + 세면대 + 수전 물때 닦기' or weekly_1, change it to include '세면대 배수구 청소'
-    if (t.id === 'weekly_1' || t.name.includes('변기 + 세면대 + 수전 물때 닦기')) {
+  
+  return tasks
+    .filter(t => t && typeof t === 'object' && t.id)
+    .map(t => {
+      const name = typeof t.name === 'string' ? t.name : '';
+      // If the task matches old name '변기 + 세면대 + 수전 물때 닦기' or weekly_1, change it to include '세면대 배수구 청소'
+      if (t.id === 'weekly_1' || name.includes('변기 + 세면대 + 수전 물때 닦기')) {
+        return {
+          ...t,
+          name: '세면대 배수구 청소 + 수전 물때 닦기'
+        };
+      }
       return {
         ...t,
-        name: '세면대 배수구 청소 + 수전 물때 닦기'
+        name: name || '새 욕실 작업'
       };
-    }
-    return t;
-  });
+    });
 };
 
 export default function App() {
@@ -181,24 +192,24 @@ export default function App() {
   
   const [dailyTasks, setDailyTasks] = useState<DailyTask[]>(() => {
     const loaded = getInitialStateFromUrlOrStorage();
-    return loaded?.dailyTasks && loaded.dailyTasks.length > 0 ? loaded.dailyTasks : INITIAL_DAILY_SUBMISSIONS;
+    return loaded && Array.isArray(loaded.dailyTasks) && loaded.dailyTasks.length > 0 ? loaded.dailyTasks : INITIAL_DAILY_SUBMISSIONS;
   });
 
   const [nTimesTasks, setNTimesTasks] = useState<NTimesTask[]>(() => {
     const loaded = getInitialStateFromUrlOrStorage();
-    const tasks = loaded?.nTimesTasks && loaded.nTimesTasks.length > 0 ? loaded.nTimesTasks : INITIAL_N_TIMES_TASKS;
+    const tasks = loaded && Array.isArray(loaded.nTimesTasks) && loaded.nTimesTasks.length > 0 ? loaded.nTimesTasks : INITIAL_N_TIMES_TASKS;
     return migrateNTimesTasks(tasks);
   });
 
   const [weeklyTasks, setWeeklyTasks] = useState<WeeklyTask[]>(() => {
     const loaded = getInitialStateFromUrlOrStorage();
-    const tasks = loaded?.weeklyTasks && loaded.weeklyTasks.length > 0 ? loaded.weeklyTasks : INITIAL_WEEKLY_TASKS;
+    const tasks = loaded && Array.isArray(loaded.weeklyTasks) && loaded.weeklyTasks.length > 0 ? loaded.weeklyTasks : INITIAL_WEEKLY_TASKS;
     return migrateWeeklyTasks(tasks);
   });
 
   const [monthlyTasks, setMonthlyTasks] = useState<MonthlyRotationItem[]>(() => {
     const loaded = getInitialStateFromUrlOrStorage();
-    return loaded?.monthlyTasks && loaded.monthlyTasks.length > 0 ? loaded.monthlyTasks : INITIAL_MONTHLY_TASKS;
+    return loaded && Array.isArray(loaded.monthlyTasks) && loaded.monthlyTasks.length > 0 ? loaded.monthlyTasks : INITIAL_MONTHLY_TASKS;
   });
 
   const [memo, setMemo] = useState<string>(() => {
@@ -219,7 +230,7 @@ export default function App() {
 
   const [relationshipQuests, setRelationshipQuests] = useState<RelationshipQuest[]>(() => {
     const loaded = getInitialStateFromUrlOrStorage();
-    return loaded?.relationshipQuests && loaded.relationshipQuests.length > 0 
+    return loaded && Array.isArray(loaded.relationshipQuests) && loaded.relationshipQuests.length > 0 
       ? loaded.relationshipQuests 
       : INITIAL_RELATIONSHIP_QUESTS;
   });
