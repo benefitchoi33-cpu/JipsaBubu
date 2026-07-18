@@ -53,6 +53,13 @@ export const INITIAL_N_TIMES_TASKS: NTimesTask[] = [
     targetCount: 2,
     completedCount: 0,
     note: '주 2회'
+  },
+  {
+    id: 'ntimes_5',
+    name: '변기 청소',
+    targetCount: 1,
+    completedCount: 0,
+    note: '주 1회'
   }
 ];
 
@@ -60,7 +67,7 @@ export const INITIAL_WEEKLY_TASKS: WeeklyTask[] = [
   {
     id: 'weekly_1',
     category: '욕실 가볍게',
-    name: '변기 + 세면대 + 수전 물때 닦기',
+    name: '세면대 배수구 청소 + 수전 물때 닦기',
     completed: false
   },
   {

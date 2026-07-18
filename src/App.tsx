@@ -110,6 +110,42 @@ const getInitialStateFromUrlOrStorage = () => {
   return null;
 };
 
+// Robust state migration helpers to force-apply the user's requested structural modifications
+const migrateNTimesTasks = (tasks: NTimesTask[]): NTimesTask[] => {
+  if (!tasks || !Array.isArray(tasks)) return INITIAL_N_TIMES_TASKS;
+  const hasToilet = tasks.some(t => t.name.replace(/\s+/g, '') === '변기청소');
+  if (!hasToilet) {
+    // Check if there is an id 'ntimes_5' already
+    const hasId5 = tasks.some(t => t.id === 'ntimes_5');
+    const newId = hasId5 ? `ntimes_${Date.now()}` : 'ntimes_5';
+    return [
+      ...tasks,
+      {
+        id: newId,
+        name: '변기 청소',
+        targetCount: 1,
+        completedCount: 0,
+        note: '주 1회'
+      }
+    ];
+  }
+  return tasks;
+};
+
+const migrateWeeklyTasks = (tasks: WeeklyTask[]): WeeklyTask[] => {
+  if (!tasks || !Array.isArray(tasks)) return INITIAL_WEEKLY_TASKS;
+  return tasks.map(t => {
+    // If the task matches old name '변기 + 세면대 + 수전 물때 닦기' or weekly_1, change it to include '세면대 배수구 청소'
+    if (t.id === 'weekly_1' || t.name.includes('변기 + 세면대 + 수전 물때 닦기')) {
+      return {
+        ...t,
+        name: '세면대 배수구 청소 + 수전 물때 닦기'
+      };
+    }
+    return t;
+  });
+};
+
 export default function App() {
   // 0. Cloud Firebase Real-time Sync States
   const [houseCode, setHouseCode] = useState<string>(() => {
@@ -150,12 +186,14 @@ export default function App() {
 
   const [nTimesTasks, setNTimesTasks] = useState<NTimesTask[]>(() => {
     const loaded = getInitialStateFromUrlOrStorage();
-    return loaded?.nTimesTasks && loaded.nTimesTasks.length > 0 ? loaded.nTimesTasks : INITIAL_N_TIMES_TASKS;
+    const tasks = loaded?.nTimesTasks && loaded.nTimesTasks.length > 0 ? loaded.nTimesTasks : INITIAL_N_TIMES_TASKS;
+    return migrateNTimesTasks(tasks);
   });
 
   const [weeklyTasks, setWeeklyTasks] = useState<WeeklyTask[]>(() => {
     const loaded = getInitialStateFromUrlOrStorage();
-    return loaded?.weeklyTasks && loaded.weeklyTasks.length > 0 ? loaded.weeklyTasks : INITIAL_WEEKLY_TASKS;
+    const tasks = loaded?.weeklyTasks && loaded.weeklyTasks.length > 0 ? loaded.weeklyTasks : INITIAL_WEEKLY_TASKS;
+    return migrateWeeklyTasks(tasks);
   });
 
   const [monthlyTasks, setMonthlyTasks] = useState<MonthlyRotationItem[]>(() => {
@@ -257,10 +295,13 @@ export default function App() {
         const currentLocal = latestStateRef.current;
         if (!currentLocal) return;
         
+        const incomingNTimes = migrateNTimesTasks(data.nTimesTasks);
+        const incomingWeekly = migrateWeeklyTasks(data.weeklyTasks);
+        
         const isSame = 
           JSON.stringify(data.dailyTasks) === JSON.stringify(currentLocal.dailyTasks) &&
-          JSON.stringify(data.nTimesTasks) === JSON.stringify(currentLocal.nTimesTasks) &&
-          JSON.stringify(data.weeklyTasks) === JSON.stringify(currentLocal.weeklyTasks) &&
+          JSON.stringify(incomingNTimes) === JSON.stringify(currentLocal.nTimesTasks) &&
+          JSON.stringify(incomingWeekly) === JSON.stringify(currentLocal.weeklyTasks) &&
           JSON.stringify(data.monthlyTasks) === JSON.stringify(currentLocal.monthlyTasks) &&
           data.memo === currentLocal.memo &&
           data.spouseAName === currentLocal.spouseAName &&
@@ -277,8 +318,8 @@ export default function App() {
             weekStart: data.weekStart || currentLocal.weekStart,
             weekEnd: data.weekEnd || currentLocal.weekEnd,
             dailyTasks: data.dailyTasks || currentLocal.dailyTasks,
-            nTimesTasks: data.nTimesTasks || currentLocal.nTimesTasks,
-            weeklyTasks: data.weeklyTasks || currentLocal.weeklyTasks,
+            nTimesTasks: incomingNTimes,
+            weeklyTasks: incomingWeekly,
             monthlyTasks: data.monthlyTasks || currentLocal.monthlyTasks,
             memo: data.memo !== undefined ? data.memo : currentLocal.memo,
             spouseAName: data.spouseAName || currentLocal.spouseAName,
@@ -294,8 +335,8 @@ export default function App() {
           if (data.weekStart) setWeekStart(data.weekStart);
           if (data.weekEnd) setWeekEnd(data.weekEnd);
           if (data.dailyTasks) setDailyTasks(data.dailyTasks);
-          if (data.nTimesTasks) setNTimesTasks(data.nTimesTasks);
-          if (data.weeklyTasks) setWeeklyTasks(data.weeklyTasks);
+          setNTimesTasks(incomingNTimes);
+          setWeeklyTasks(incomingWeekly);
           if (data.monthlyTasks) setMonthlyTasks(data.monthlyTasks);
           if (data.memo !== undefined) setMemo(data.memo);
           if (data.spouseAName) setSpouseAName(data.spouseAName);
@@ -1413,97 +1454,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* 새 기능: 공유 링크 생성 및 GitHub 가이드 (실시간 링크 제어 영역) */}
-        <div className="mt-4 pt-4 border-t border-slate-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 왼쪽: 실시간 체크리스트 공유 제어 */}
-            <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/80">
-              <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1.5">
-                <Share2 className="w-3.5 h-3.5 text-indigo-600 font-bold" />
-                가족 공유 및 단독 실행 링크 생성
-              </h4>
-              <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
-                현재 체크 상태와 작성 중인 항목들을 하나로 압축하여 공유 가능한 특수 링크를 생성합니다. 배우자나 자녀에게 전송해 동일한 상태를 보관/출력할 수 있습니다.
-              </p>
-              
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyShareLink}
-                  className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
-                  title="현재 체크 박스 마킹 및 추가해둔 커스텀 항목을 고스란히 담은 복사 링크"
-                >
-                  <Link className="w-3.5 h-3.5" />
-                  {copiedState === 'share' ? (
-                    <span className="text-emerald-600 flex items-center gap-1 font-bold">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" /> 공유 링크 복사 완료!
-                    </span>
-                  ) : (
-                    <span>현재 상태 포함 공유 링크 복사</span>
-                  )}
-                </button>
 
-                <button
-                  type="button"
-                  onClick={handleCopyDirectLink}
-                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
-                  title="처음 상태의 깔끔한 체크리스트 웹페이지로 바로 가기 복사 링크"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  {copiedState === 'direct' ? (
-                    <span className="text-emerald-600 flex items-center gap-1 font-bold">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" /> 원본 링크 복사 완료!
-                    </span>
-                  ) : (
-                    <span>기본 앱 주소 복사</span>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* 오른쪽: GitHub 가이드 */}
-            <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-200/80 flex flex-col justify-between">
-              <div>
-                <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mb-1.5">
-                  <Github className="w-3.5 h-3.5 text-slate-700" />
-                  GitHub 저장소 공개 범위 (Private ➡️ Public) 안내
-                </h4>
-                <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
-                  내보내기 한 내 GitHub 저장소가 Private 상태라면 나 이외에 다른 사람이나 가족은 페이지를 볼 수 없습니다. 누구나 접속해 인쇄할 수 있도록 Public으로 쉽게 전환하세요.
-                </p>
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setShowGitGuide(!showGitGuide)}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 transition-colors cursor-pointer"
-                >
-                  <span>{showGitGuide ? '💡 상세 전환 방법 접기' : '💡 Private ➡️ Public 원클릭 전환 방법 보기'}</span>
-                  <ExternalLink className="w-3 h-3 shrink-0" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* GitHub 전환 가이드 드롭다운 */}
-          {showGitGuide && (
-            <div className="mt-3 p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 text-xs text-indigo-900 animate-fade-in">
-              <p className="font-bold mb-1.5 flex items-center gap-1">
-                <span>🔐</span> 이미 가져간 내 GitHub 저장소(Repository) 공개 범위 변경 4단계:
-              </p>
-              <ol className="list-decimal pl-4 space-y-1 text-slate-600 font-normal leading-relaxed text-[11px]">
-                <li>GitHub 사이트에 로그인한 뒤 이 프로젝트의 리포지토리(Repository) 페이지로 이동합니다.</li>
-                <li>오른쪽 상단 끝 부분에 있는 ⚙️ <strong>Settings (설정)</strong> 탭을 클릭하여 환경설정창을 엽니다.</li>
-                <li>설정 항목 전체 화면을 가장 하단 구역까지 끝까지 아래로 스크롤하여 빨간 경고 영역인 <strong>Danger Zone (위험 구역)</strong>을 찾습니다.</li>
-                <li>첫 번째 옵션 항목인 <strong>Change visibility (공개 설정 변경)</strong> 버튼을 누른 후, <strong>Make public (공개용 저장소로 전환)</strong>을 선택하고 본인 확인 과정을 거쳐 최종 완료합니다.</li>
-              </ol>
-              <p className="mt-2 text-[10px] text-indigo-500 font-semibold leading-normal">
-                이제 주소(GitHub Pages 등)를 가족들에게 보내면 다른 스마트폰이나 모니터, 태블릿 기기에서도 언제든지 실시간으로 접속하여 함께 뷰어를 보거나 체크할 수 있습니다!
-              </p>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Main A4 styled printable sheet container */}
