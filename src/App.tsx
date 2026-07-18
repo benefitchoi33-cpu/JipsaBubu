@@ -258,7 +258,7 @@ export default function App() {
   });
 
   // 2. Control/View States
-  const [activeTab, setActiveTab] = useState<'all' | 'daily' | 'ntimes' | 'weekly' | 'monthly' | 'stats'>('daily');
+  const [activeTab, setActiveTab] = useState<'all' | 'daily' | 'ntimes' | 'weekly' | 'monthly' | 'quests' | 'stats'>('daily');
   const [myRole, setMyRole] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('house_cleaning_my_role') || 'A';
@@ -1678,7 +1678,17 @@ export default function App() {
                 : 'text-slate-650 hover:bg-white hover:text-slate-900'
             }`}
           >
-            <span>💖</span> 월간 / 퀘스트
+            <span>🔄</span> 월간 로테이션
+          </button>
+          <button
+            onClick={() => setActiveTab('quests')}
+            className={`px-3 py-2 text-xs font-black rounded-lg whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'quests'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100/55 scale-[1.02]'
+                : 'text-slate-650 hover:bg-white hover:text-slate-900'
+            }`}
+          >
+            <span>💖</span> 부부 퀘스트
           </button>
           <button
             onClick={() => setActiveTab('stats')}
@@ -1846,7 +1856,7 @@ export default function App() {
           </div>
 
           {/* 💖 부부 관계 퀘스트 */}
-          <div className={`${activeTab === 'all' || activeTab === 'monthly' ? 'block' : 'hidden md:block'} print:block`}>
+          <div className={`${activeTab === 'all' || activeTab === 'quests' ? 'block' : 'hidden md:block'} print:block`}>
             <RelationshipQuestList
               quests={relationshipQuests}
               onToggleQuest={handleToggleQuest}
@@ -1856,7 +1866,7 @@ export default function App() {
           </div>
 
           {/* 📝 메모란 */}
-          <div className={`${activeTab === 'all' || activeTab === 'monthly' ? 'block' : 'hidden md:block'} print:block`}>
+          <div className={`${activeTab === 'all' || activeTab === 'monthly' || activeTab === 'quests' ? 'block' : 'hidden md:block'} print:block`}>
             <MemoSection
               memo={memo}
               onMemoChange={setMemo}

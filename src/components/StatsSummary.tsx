@@ -119,6 +119,107 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
     }
   });
 
+  // Calculate cleanliness level by house area
+  const areaStats = {
+    kitchen: { name: '주방', icon: '🍳', possible: 0, completed: 0 },
+    bathroom: { name: '욕실/화장실', icon: '🧼', possible: 0, completed: 0 },
+    bedroom: { name: '침실', icon: '🛏️', possible: 0, completed: 0 },
+    livingRoom: { name: '거실/바닥', icon: '🛋️', possible: 0, completed: 0 },
+    others: { name: '세탁/기타', icon: '🧺', possible: 0, completed: 0 },
+  };
+
+  const getAreaKey = (taskName: string, category?: string): keyof typeof areaStats => {
+    const combined = `${taskName} ${category || ''}`.replace(/\s+/g, '');
+    if (
+      combined.includes('설거지') ||
+      combined.includes('싱크대') ||
+      combined.includes('가스레인지') ||
+      combined.includes('인덕션') ||
+      combined.includes('음식물') ||
+      combined.includes('주방') ||
+      combined.includes('냉장고')
+    ) {
+      return 'kitchen';
+    }
+    if (
+      combined.includes('욕실') ||
+      combined.includes('화장실') ||
+      combined.includes('스퀴지') ||
+      combined.includes('변기') ||
+      combined.includes('세면대') ||
+      combined.includes('수전') ||
+      combined.includes('배수구')
+    ) {
+      return 'bathroom';
+    }
+    if (
+      combined.includes('이불') ||
+      combined.includes('침실') ||
+      combined.includes('침구') ||
+      combined.includes('베개')
+    ) {
+      return 'bedroom';
+    }
+    if (
+      combined.includes('바닥') ||
+      combined.includes('청소기') ||
+      combined.includes('물걸레') ||
+      combined.includes('가구') ||
+      combined.includes('선반') ||
+      combined.includes('먼지') ||
+      combined.includes('거실')
+    ) {
+      return 'livingRoom';
+    }
+    return 'others';
+  };
+
+  // 1. Process dailyTasks (possible: 7 checks per task)
+  dailyTasks.forEach((task) => {
+    const key = getAreaKey(task.name);
+    areaStats[key].possible += 7;
+    Object.values(task.checks).forEach((checked) => {
+      if (checked) {
+        areaStats[key].completed += 1;
+      }
+    });
+  });
+
+  // 2. Process nTimesTasks (possible: targetCount)
+  nTimesTasks.forEach((task) => {
+    const key = getAreaKey(task.name);
+    areaStats[key].possible += task.targetCount;
+    const completedCount = task.completedBy 
+      ? task.completedBy.filter(Boolean).length 
+      : task.completedCount;
+    areaStats[key].completed += Math.min(completedCount, task.targetCount);
+  });
+
+  // 3. Process weeklyTasks (possible: 1)
+  weeklyTasks.forEach((task) => {
+    const key = getAreaKey(task.name, task.category);
+    areaStats[key].possible += 1;
+    if (task.completed) {
+      areaStats[key].completed += 1;
+    }
+  });
+
+  // 4. Process monthlyTasks if selected (possible: 1)
+  monthlyTasks.forEach((task) => {
+    if (task.isSelected) {
+      const key = getAreaKey(task.name, task.category);
+      areaStats[key].possible += 1;
+      if (task.completed) {
+        areaStats[key].completed += 1;
+      }
+    }
+  });
+
+  const areasList = Object.values(areaStats).map((area) => {
+    const percent = area.possible > 0 ? Math.round((area.completed / area.possible) * 100) : 100;
+    return { ...area, percent };
+  });
+
   // Balanced team play check
   const hasCooperated = xpA > 0 && xpB > 0;
   const xpDifference = Math.abs(xpA - xpB);
@@ -138,8 +239,53 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
     <div className="w-full mb-6">
       {/* 🔮 INTERACTIVE SCREEN SCOREBOARD - Hidden on print */}
       <div className="no-print space-y-4">
-        {/* Weekly Battle/Coop indicators */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        
+        {/* Mobile-Friendly compact row layout (Visible only on mobile) */}
+        <div className="block md:hidden bg-slate-50/70 border border-slate-200/80 rounded-xl p-3.5 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-200/60 pb-2">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">주간 살림 기여도</span>
+            {isHealthyBalance ? (
+              <span className="text-[9px] bg-emerald-50 text-emerald-700 font-extrabold px-2 py-0.5 rounded-full border border-emerald-100 flex items-center gap-0.5 animate-pulse">
+                💝 시너지 활성 (+50 XP)
+              </span>
+            ) : (
+              <span className="text-[9px] bg-slate-100 text-slate-500 font-bold px-2 py-0.5 rounded-full border border-slate-200">
+                ⚖️ 밸런스 협동 중
+              </span>
+            )}
+          </div>
+          <div className="flex items-center justify-between gap-2.5">
+            {/* Spouse A */}
+            <div className="flex-1 bg-white border border-pink-100/70 p-2.5 rounded-xl flex items-center justify-between shadow-3xs">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-sm select-none">🤵</span>
+                <span className="text-xs font-extrabold text-slate-700 truncate">{spouseAName}</span>
+              </div>
+              <span className="text-xs font-black text-pink-600 font-mono">+{xpA} <span className="text-[9px] text-pink-450 font-bold">XP</span></span>
+            </div>
+
+            {/* Vs / Heart */}
+            <div className="shrink-0 flex items-center justify-center">
+              <span className="text-sm">💖</span>
+            </div>
+
+            {/* Spouse B */}
+            <div className="flex-1 bg-white border border-indigo-100/70 p-2.5 rounded-xl flex items-center justify-between shadow-3xs">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-sm select-none">👰</span>
+                <span className="text-xs font-extrabold text-slate-700 truncate">{spouseBName}</span>
+              </div>
+              <span className="text-xs font-black text-indigo-600 font-mono">+{xpB} <span className="text-[9px] text-indigo-450 font-bold">XP</span></span>
+            </div>
+          </div>
+          
+          <div className="text-[10.5px] text-center text-slate-500 font-bold">
+            주간 총합 시너지: <strong className="text-amber-600 font-extrabold">+{xpA + xpB + (isHealthyBalance ? 50 : 0)} XP</strong>
+          </div>
+        </div>
+
+        {/* Weekly Battle/Coop indicators (Hidden on mobile, visible on tablet/desktop) */}
+        <div className="hidden md:grid grid-cols-3 gap-3">
           {/* Spouse A Profile card */}
           <div className="bg-pink-50/40 p-3 rounded-lg border border-pink-100/50 relative overflow-hidden flex flex-col justify-between">
             <div className="flex items-center justify-between">
@@ -264,6 +410,51 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
             </p>
           </div>
         </div>
+
+        {/* Real-time Cleanliness Index by House Area */}
+        <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-200/80">
+          <h4 className="text-xs font-black text-slate-800 flex items-center gap-1.5 mb-3">
+            <span>🧼</span> 집의 부위별 청정 지수 (Area Cleanliness Index)
+          </h4>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            {areasList.map((area) => (
+              <div key={area.name} className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-3xs flex flex-col justify-between">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-slate-700 flex items-center gap-1">
+                    <span className="text-sm select-none">{area.icon}</span>
+                    <span>{area.name}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-bold font-mono">
+                    {area.completed}/{area.possible}
+                  </span>
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-[9px] text-slate-400 font-bold">청정률</span>
+                    <span className={`text-xs font-black font-mono ${
+                      area.percent >= 90 ? 'text-indigo-600' :
+                      area.percent >= 60 ? 'text-emerald-600' :
+                      area.percent >= 30 ? 'text-amber-600' :
+                      'text-rose-500'
+                    }`}>{area.percent}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
+                    <div 
+                      className={`h-full transition-all duration-500 ${
+                        area.percent >= 90 ? 'bg-indigo-500' :
+                        area.percent >= 60 ? 'bg-emerald-500' :
+                        area.percent >= 30 ? 'bg-amber-500' :
+                        'bg-rose-500'
+                      }`}
+                      style={{ width: `${area.percent}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
 
       {/* 🖨️ FOR PRINT DESIGN - ONLY visible on print */}
