@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { DailyChecklist } from './components/DailyChecklist';
 import { NTimeChecklist } from './components/NTimeChecklist';
 import { WeeklyChecklist } from './components/WeeklyChecklist';
@@ -262,6 +263,8 @@ export default function App() {
   const [copiedState, setCopiedState] = useState<'none' | 'share' | 'direct'>('none');
   const [showGitGuide, setShowGitGuide] = useState(false);
   const [isEditingNames, setIsEditingNames] = useState(false);
+  const [isEditingDates, setIsEditingDates] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   
   // 3. Custom Friendly Modal dialogs to bypass Chrome Sandbox Frame rules
   const [isNextWeekModalOpen, setIsNextWeekModalOpen] = useState(false);
@@ -1267,69 +1270,84 @@ export default function App() {
       `}</style>
 
       {/* Control center panel for real time tracking - Hidden automatically on paper printing */}
-      <div className="max-w-4xl mx-auto mb-4 sm:mb-5 no-print bg-white rounded-xl p-3 sm:p-5 border border-slate-200 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-1 px-2.5 bg-indigo-100 text-indigo-700 font-bold rounded-md text-xs">최고 보송보송 인쇄 시트</span>
-              <span className="text-[10px] text-slate-400 font-mono tracking-tight">Iframe 및 모바일 완벽 대응 패치</span>
+      <div className="max-w-4xl mx-auto mb-4 sm:mb-5 no-print bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/85 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-pink-50 rounded-2xl flex items-center justify-center text-xl shadow-xs shrink-0 select-none">
+              ✨
             </div>
-            <h1 className="text-xl font-bold text-slate-900 mt-1 flex items-center gap-1.5">
-              <span>🧹</span> 집안일도 일이다! 메이커
-            </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              냉장고 자석판에 걸어놓고 체크하기 딱 예쁜 주간 전용 디자인 포맷입니다. 온라인으로 클릭 관리하고 매주 재활용하거나 완벽한 A4 비율로 간편하게 인쇄해 보세요.
-            </p>
+            <div>
+              <h1 className="text-lg font-black tracking-tight text-slate-850 flex items-center gap-1.5 leading-none">
+                집안일도 일이다!
+                <span className="text-[10px] bg-pink-50 text-pink-600 font-extrabold px-2 py-0.5 rounded-full border border-pink-100">
+                  신혼부부 살림로그
+                </span>
+              </h1>
+              <p className="text-[11px] text-slate-500 font-semibold mt-1 leading-normal">
+                부부의 집안일을 퀘스트처럼 해결하고, 함께 성장 스탯을 획득하는 스마트 체크보드
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleOpenSettlement}
-              className="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-lg transition-all flex items-center gap-1.5 hover:scale-[1.02] transform cursor-pointer shadow-md shadow-indigo-100"
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition-all flex items-center gap-1.5 hover:scale-[1.01] transform cursor-pointer shadow-md shadow-indigo-100/60"
               title="이번 주 집안일 달성률을 정산하고 보너스 XP를 획득하여 우리 집 레벨을 높입니다."
               id="btn-weekly-settle"
             >
-              <Trophy className="w-3.5 h-3.5 fill-amber-400 text-amber-100 animate-pulse" />
-              🏆 주간 살림 정산 (보너스 XP!)
-            </button>
-            <button
-              onClick={() => setIsResetModalOpen(true)}
-              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-              title="모든 항목을 완전히 최초 설치 Preset 모습으로 돌리기"
-              id="btn-full-reset"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              기본 프리셋 초기화
+              <Trophy className="w-3.5 h-3.5 fill-amber-400 text-amber-100" />
+              🏆 주간 살림 정산
             </button>
           </div>
         </div>
 
-        {/* Date Setter panel */}
-        <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200/60 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-1.5">
+        {/* Streamlined Weekly navigation bar */}
+        <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
             <CalendarDays className="w-4 h-4 text-indigo-600 shrink-0" />
-            <span className="font-bold text-slate-700">체크리스트 적용 주간:</span>
-            <div className="ml-2 flex items-center gap-1">
-              <input
-                type="date"
-                value={weekStart}
-                onChange={(e) => handleDateChange(e.target.value, weekEnd)}
-                className="px-2 py-1 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white font-medium"
-              />
-              <span className="text-slate-400">~</span>
-              <input
-                type="date"
-                value={weekEnd}
-                onChange={(e) => handleDateChange(weekStart, e.target.value)}
-                className="px-2 py-1 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white font-medium"
-              />
-            </div>
+            <span>적용 주간:</span>
+            {!isEditingDates ? (
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-100 text-slate-800 font-mono font-black px-2.5 py-1 rounded-lg text-xs border border-slate-200/50">
+                  {weekStart} ~ {weekEnd}
+                </span>
+                <button
+                  onClick={() => setIsEditingDates(true)}
+                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-black hover:underline cursor-pointer"
+                >
+                  날짜 선택
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-lg shadow-2xs">
+                <input
+                  type="date"
+                  value={weekStart}
+                  onChange={(e) => handleDateChange(e.target.value, weekEnd)}
+                  className="px-2 py-1 border border-slate-250 rounded font-medium text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white text-slate-800"
+                />
+                <span className="text-slate-400">~</span>
+                <input
+                  type="date"
+                  value={weekEnd}
+                  onChange={(e) => handleDateChange(weekStart, e.target.value)}
+                  className="px-2 py-1 border border-slate-250 rounded font-medium text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white text-slate-800"
+                />
+                <button
+                  onClick={() => setIsEditingDates(false)}
+                  className="px-2.5 py-1 bg-slate-800 text-white text-[10px] rounded-md font-extrabold hover:bg-slate-900 cursor-pointer"
+                >
+                  완료
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
             <button
               onClick={() => setRelativeWeek(-1)}
-              className="px-2.5 py-1.5 border border-slate-300 hover:bg-white text-slate-600 rounded bg-white hover:border-slate-400 cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg cursor-pointer"
             >
               이전 주
             </button>
@@ -1339,219 +1357,243 @@ export default function App() {
                 setWeekStart(range.start);
                 setWeekEnd(range.end);
               }}
-              className="px-2.5 py-1.5 border border-slate-300 hover:bg-white text-slate-700 font-semibold rounded bg-slate-100/50 cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-lg cursor-pointer"
             >
-              오늘 주간
+              오늘
             </button>
             <button
               onClick={() => setRelativeWeek(1)}
-              className="px-2.5 py-1.5 border border-slate-300 hover:bg-white text-slate-600 rounded bg-white hover:border-slate-400 cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg cursor-pointer"
             >
               다음 주
             </button>
-          </div>
-        </div>
 
-        {/* Newlyweds Character Names panel */}
-        <div className="mt-3 p-3 bg-pink-50/20 rounded-lg border border-pink-100/75 flex flex-wrap items-center justify-between gap-3 text-xs no-print">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="font-extrabold text-pink-700 flex items-center gap-1 shrink-0">
-              <Heart className="w-4 h-4 fill-pink-500 text-pink-500 animate-pulse" /> 
-              부부 캐릭터 설정:
-            </span>
-            
-            {!isEditingNames ? (
-              <div className="flex items-center gap-2">
-                <span className="font-black text-slate-800 bg-white border border-pink-100 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-2xs">
-                  <span className="text-pink-600">🤵 {spouseAName}</span>
-                  <span className="text-slate-300 font-normal">|</span>
-                  <span className="text-indigo-600">👰 {spouseBName}</span>
-                </span>
-                <button
-                  onClick={() => setIsEditingNames(true)}
-                  className="px-2 py-1 text-[10px] text-pink-700 hover:text-pink-800 font-extrabold hover:underline cursor-pointer flex items-center gap-0.5"
-                >
-                  ⚙️ 이름 변경
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500 font-medium">🤵 배우자 A:</span>
-                  <input
-                    type="text"
-                    value={spouseAName}
-                    onChange={(e) => setSpouseAName(e.target.value.trim() || '지민')}
-                    placeholder="예: 지민"
-                    className="px-2 py-1 border border-slate-300 rounded font-bold bg-white text-pink-600 w-16 focus:ring-1 focus:ring-pink-400 focus:outline-none"
-                  />
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500 font-medium">👰 배우자 B:</span>
-                  <input
-                    type="text"
-                    value={spouseBName}
-                    onChange={(e) => setSpouseBName(e.target.value.trim() || '수현')}
-                    placeholder="예: 수현"
-                    className="px-2 py-1 border border-slate-300 rounded font-bold bg-white text-indigo-650 w-16 focus:ring-1 focus:ring-indigo-400 focus:outline-none"
-                  />
-                </div>
-                <button
-                  onClick={() => setIsEditingNames(false)}
-                  className="px-2.5 py-1 bg-pink-600 hover:bg-pink-700 text-white font-extrabold rounded text-[10px] cursor-pointer"
-                >
-                  설정 완료
-                </button>
-              </div>
-            )}
-          </div>
-          <span className="text-[10px] text-slate-400 font-medium">
-            * 한 번 설정해두면 프로필, 요일별 선택자, 성장 스탯에 실시간 연동됩니다.
-          </span>
-        </div>
-
-        {/* Real-time Spouse Cloud Sync Panel */}
-        <div className="mt-3 p-3 bg-indigo-50/30 rounded-lg border border-indigo-150/70 text-xs no-print">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <span className="font-extrabold text-indigo-700 flex items-center gap-1">
-                <span>🌍</span> 실시간 부부 데이터 연동 (Cloud Sync):
-                {houseCode ? (
-                  <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 font-black rounded-sm text-[9px] border border-emerald-100 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-                    실시간 연결됨
-                  </span>
-                ) : (
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 font-bold rounded-sm text-[9px]">
-                    로컬 기기 전용 (개별 작동)
-                  </span>
-                )}
-              </span>
-              <p className="text-[11px] text-slate-550 font-semibold leading-relaxed">
-                {houseCode 
-                  ? '배우자와 화면이 동기화되었습니다! 어느 한쪽이 체크하면 양쪽 폰에 실시간으로 즉시 반영됩니다.'
-                  : '주소(초대 링크)를 복사해서 공유하거나, 연동 코드를 입력해 상대방의 기기와 데이터를 완벽하게 실시간 공유하세요.'
-                }
-              </p>
-            </div>
-
-            {/* Sync Controls */}
-            <div className="shrink-0">
-              {houseCode ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="p-1 px-2 border border-indigo-200/65 bg-indigo-50/55 text-indigo-800 font-mono font-extrabold text-xs rounded-md">
-                    코드: <span className="tracking-wide text-indigo-700">{houseCode}</span>
-                  </div>
-                  
-                  <button
-                    onClick={handleCopySyncCode}
-                    className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold hover:scale-[1.02] transform transition-all cursor-pointer flex items-center gap-1 shadow-xs"
-                  >
-                    <Copy className="w-3 h-3" />
-                    {copiedSyncCode ? '초대장 주소 복사함!' : '초대 링크 복사'}
-                  </button>
-
-                  <button
-                    onClick={handleDisconnectSyncSession}
-                    className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-bold cursor-pointer"
-                  >
-                    연동 해제
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    onClick={handleCreateSyncSession}
-                    disabled={syncStatus === 'syncing'}
-                    className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-extrabold transition-all cursor-pointer shadow-xs disabled:opacity-50"
-                  >
-                    {syncStatus === 'syncing' ? '연동 중...' : '🔗 새 연동코드 생성'}
-                  </button>
-                  
-                  <div className="flex items-center gap-1 border border-slate-200 bg-white p-0.5 rounded-lg shadow-xs">
-                    <input
-                      type="text"
-                      maxLength={6}
-                      placeholder="6자리 연동코드"
-                      value={syncCodeInput}
-                      onChange={(e) => setSyncCodeInput(e.target.value.replace(/\D/g, ''))}
-                      className="px-1.5 py-1 bg-transparent w-24 text-center font-bold font-mono focus:outline-none"
-                    />
-                    <button
-                      onClick={() => handleJoinSyncSession(syncCodeInput)}
-                      disabled={syncStatus === 'syncing' || syncCodeInput.length !== 6}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-md disabled:opacity-40 select-none cursor-pointer"
-                    >
-                      코드 연결
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sync status/errors info line */}
-          {syncErrorMessage && (
-            <div className="mt-1.5 text-[10px] text-rose-600 bg-rose-50 border border-rose-100 rounded p-1 px-1.5 font-bold animate-pulse">
-              ⚠️ {syncErrorMessage}
-            </div>
-          )}
-        </div>
-
-        {/* Print Instruction guides */}
-        <div className="mt-4 p-4 bg-emerald-50/40 rounded-xl border border-emerald-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="flex items-center gap-1.5 font-bold text-xs text-emerald-900">
-              <Printer className="w-4 h-4 stroke-[2.5]" />
-              🖨️ 인쇄 & 보드판 출력 원리
-            </span>
-            <p className="text-xs text-emerald-800/80 leading-relaxed font-normal">
-              - <strong>빈 체크리스트 인쇄</strong>: 보드마커 등으로 손글씨 채크 희망 시 사용합니다.<br/>
-              - <strong>작성 내용 그대로 인쇄</strong>: 현재까지 화면에서 마킹한 상태 그대로 보송보송하게 출력합니다.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] text-slate-500 font-bold uppercase">출력 포맷</span>
-              <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-xs">
-                <button
-                  type="button"
-                  onClick={() => setPrintModel('blank')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-                    printModel === 'blank'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  빈 양식 인쇄
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPrintModel('checked')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-                    printModel === 'checked'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  체크된 양식 인쇄
-                </button>
-              </div>
-            </div>
-
+            {/* Collapsible settings drawer toggle */}
             <button
-              onClick={handlePrint}
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-transform hover:scale-[1.03] shadow-md flex items-center gap-2 self-end cursor-pointer"
-              id="btn-print-action"
+              onClick={() => setShowSettings(!showSettings)}
+              className={`ml-2 px-3 py-1.5 text-xs font-black rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
+                showSettings
+                  ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
             >
-              <Printer className="w-4 h-4" />
-              지금 인쇄하기
+              <span>⚙️</span> {showSettings ? '설정 닫기' : '설정 & 인쇄'}
             </button>
           </div>
         </div>
 
+        {/* Expandable Setup Drawer Console using motion */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Column 1: Profile & Cloud Sync */}
+                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200/50">
+                  {/* Subsection: Character Profile setup */}
+                  <div>
+                    <h4 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 mb-2">
+                      <Heart className="w-3.5 h-3.5 fill-pink-500 text-pink-500" />
+                      부부 캐릭터 이름 설정
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      {!isEditingNames ? (
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-xs text-slate-800 bg-white border border-slate-200/75 rounded-lg px-3 py-1.5 flex items-center gap-1 shadow-2xs">
+                            <span className="text-pink-600">🤵 {spouseAName}</span>
+                            <span className="text-slate-300 font-normal">|</span>
+                            <span className="text-indigo-600">👰 {spouseBName}</span>
+                          </span>
+                          <button
+                            onClick={() => setIsEditingNames(true)}
+                            className="px-2 py-1.5 text-[10px] text-indigo-600 hover:text-indigo-800 bg-white border border-slate-200 rounded font-black cursor-pointer shadow-2xs"
+                          >
+                            이름 수정
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-slate-500">🤵</span>
+                            <input
+                              type="text"
+                              value={spouseAName}
+                              onChange={(e) => setSpouseAName(e.target.value.trim() || '지민')}
+                              className="px-2 py-1 border border-slate-300 rounded font-bold bg-white text-pink-600 w-16 text-center focus:ring-1 focus:ring-pink-400 focus:outline-none text-xs"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-slate-500">👰</span>
+                            <input
+                              type="text"
+                              value={spouseBName}
+                              onChange={(e) => setSpouseBName(e.target.value.trim() || '수현')}
+                              className="px-2 py-1 border border-slate-300 rounded font-bold bg-white text-indigo-650 w-16 text-center focus:ring-1 focus:ring-indigo-400 focus:outline-none text-xs"
+                            />
+                          </div>
+                          <button
+                            onClick={() => setIsEditingNames(false)}
+                            className="px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white font-extrabold rounded text-[10px] cursor-pointer"
+                          >
+                            저장
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
+                  {/* Subsection: Cloud Sync */}
+                  <div className="border-t border-slate-200/60 pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                        <span>🌍</span> 실시간 부부 클라우드 연동
+                      </h4>
+                      {houseCode ? (
+                        <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 font-extrabold rounded text-[9px] border border-emerald-100 flex items-center gap-1 select-none">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+                          실시간 연결중
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 bg-slate-200 text-slate-600 font-bold rounded text-[9px] select-none">
+                          단독 로컬 모드
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-[10px] text-slate-500 leading-normal mb-2">
+                      {houseCode
+                        ? '배우자와 실시간 동기화 상태입니다. 어느 기기에서든 체크하면 즉시 화면에 반영됩니다.'
+                        : '동일 코드를 상대 기기에 입력해 데이터를 실시간 공유하세요.'
+                      }
+                    </p>
+
+                    {houseCode ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="px-2 py-1 bg-white border border-slate-200 font-mono font-black text-xs rounded text-slate-800">
+                          연동코드: <span className="text-indigo-600 font-black">{houseCode}</span>
+                        </span>
+                        <button
+                          onClick={handleCopySyncCode}
+                          className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-black cursor-pointer shadow-3xs"
+                        >
+                          {copiedSyncCode ? '초대링크 복사됨!' : '초대링크 복사'}
+                        </button>
+                        <button
+                          onClick={handleDisconnectSyncSession}
+                          className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-500 rounded text-[10px] font-bold cursor-pointer"
+                        >
+                          연동 해제
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <button
+                            onClick={handleCreateSyncSession}
+                            disabled={syncStatus === 'syncing'}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[10px] font-extrabold cursor-pointer disabled:opacity-50 shadow-3xs"
+                          >
+                            {syncStatus === 'syncing' ? '연동 중...' : '🔗 새 연동코드 생성'}
+                          </button>
+                          <span className="text-slate-350 text-[10px]">또는</span>
+                          <div className="flex items-center gap-1 border border-slate-200 bg-white p-0.5 rounded-lg shadow-3xs">
+                            <input
+                              type="text"
+                              maxLength={6}
+                              placeholder="6자리 코드 입력"
+                              value={syncCodeInput}
+                              onChange={(e) => setSyncCodeInput(e.target.value.replace(/\D/g, ''))}
+                              className="px-2 py-0.5 bg-transparent w-24 text-center font-bold font-mono text-xs focus:outline-none"
+                            />
+                            <button
+                              onClick={() => handleJoinSyncSession(syncCodeInput)}
+                              disabled={syncStatus === 'syncing' || syncCodeInput.length !== 6}
+                              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white font-extrabold rounded-md text-[10px] disabled:opacity-40 cursor-pointer"
+                            >
+                              코드 연결
+                            </button>
+                          </div>
+                        </div>
+                        {syncErrorMessage && (
+                          <div className="text-[10px] text-rose-600 font-bold bg-rose-50 border border-rose-100 rounded px-2 py-1">
+                            ⚠️ {syncErrorMessage}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Column 2: Printing & Preset Manager */}
+                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200/50 flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5 mb-2">
+                      <Printer className="w-3.5 h-3.5 text-emerald-600" />
+                      A4 냉장고 자석판 인쇄 설정
+                    </h4>
+                    <p className="text-[10px] text-slate-500 leading-normal mb-3">
+                      보드마커로 필기하는 <strong>[빈 양식 인쇄]</strong>와 화면 마킹을 그대로 가져가는 <strong>[체크된 양식 인쇄]</strong>를 제공합니다. 크롬 인쇄창에서 &apos;배경 그래픽&apos; 옵션을 켜면 예쁜 테마 색이 함께 인쇄됩니다.
+                    </p>
+
+                    <div className="flex items-center gap-2.5">
+                      <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 shadow-3xs">
+                        <button
+                          type="button"
+                          onClick={() => setPrintModel('blank')}
+                          className={`px-3 py-1 text-[11px] font-black rounded transition-colors cursor-pointer ${
+                            printModel === 'blank'
+                              ? 'bg-emerald-600 text-white'
+                              : 'text-slate-650 hover:bg-slate-50'
+                          }`}
+                        >
+                          빈 양식
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPrintModel('checked')}
+                          className={`px-3 py-1 text-[11px] font-black rounded transition-colors cursor-pointer ${
+                            printModel === 'checked'
+                              ? 'bg-emerald-600 text-white'
+                              : 'text-slate-650 hover:bg-slate-50'
+                          }`}
+                        >
+                          체크 포함
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={handlePrint}
+                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded-lg shadow-sm flex items-center gap-1 cursor-pointer transition-transform hover:scale-[1.01]"
+                        id="btn-print-action"
+                      >
+                        <Printer className="w-3 h-3" />
+                        지금 인쇄하기
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Advanced Actions Row */}
+                  <div className="border-t border-slate-200/60 pt-3 flex items-center justify-between text-[10px] text-slate-400">
+                    <span>초기화 상태로 되돌리기:</span>
+                    <button
+                      onClick={() => setIsResetModalOpen(true)}
+                      className="text-rose-600 hover:text-rose-700 hover:underline font-extrabold flex items-center gap-0.5 cursor-pointer"
+                      id="btn-full-reset"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      기본 프리셋 초기화
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Mobile-Friendly Navigation Tabs (Hidden on Print, and available on all screens with horizontal scroll) */}
