@@ -92,7 +92,7 @@ export const NTimeChecklist: React.FC<NTimeChecklistProps> = ({
                     )}
                   </div>
                 </td>
-                <td className="py-1.5 sm:py-2.5 px-2 sm:px-3 border-l border-slate-200 text-center">
+                <td className="py-3 sm:py-2.5 px-2 sm:px-3 border-l border-slate-200 text-center">
                   <div className="flex items-center justify-center gap-2">
                     {Array.from({ length: task.targetCount }).map((_, i) => {
                       const checkedBy = task.completedBy ? task.completedBy[i] : (task.completedCount > i ? spouseAName : null);
@@ -106,25 +106,25 @@ export const NTimeChecklist: React.FC<NTimeChecklistProps> = ({
                           {/* Screen interactive checkbox */}
                           <button
                             onClick={() => onToggleCheck(task.id, i)}
-                            className="w-6 h-6 flex items-center justify-center rounded-full transition-all no-print select-none cursor-pointer"
+                            className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full transition-all no-print select-none cursor-pointer"
                             id={`check-ntimes-${task.id}-${i}`}
                           >
                             {checkedBy === spouseAName ? (
                               <div
-                                className="w-6 h-6 flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-pink-100 hover:scale-105"
+                                className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-500 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-pink-100 hover:scale-105"
                                 title={`${spouseAName} 완료 (+15 XP)`}
                               >
                                 🤵{initialA}
                               </div>
                             ) : checkedBy === spouseBName ? (
                               <div
-                                className="w-6 h-6 flex items-center justify-center rounded-full bg-indigo-600 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-indigo-100 hover:scale-105"
+                                className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-600 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-indigo-100 hover:scale-105"
                                 title={`${spouseBName} 완료 (+15 XP)`}
                               >
                                 👰{initialB}
                               </div>
                             ) : (
-                              <div className="w-5 h-5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 text-slate-350 hover:text-pink-400 text-[10px] font-bold">
+                              <div className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 text-slate-350 hover:text-pink-400 text-sm sm:text-xs font-bold">
                                 +
                               </div>
                             )}

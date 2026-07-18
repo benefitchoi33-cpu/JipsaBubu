@@ -94,36 +94,36 @@ export const DailyChecklist: React.FC<DailyChecklistProps> = ({
                   return (
                     <td
                       key={day}
-                      className="py-1.5 sm:py-2 text-center border-l border-slate-200 cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                      className="py-3 sm:py-2 text-center border-l border-slate-200 cursor-pointer select-none hover:bg-slate-50 transition-colors"
                       onClick={() => onToggleCheck(task.id, day)}
                     >
                       {/* Interactive Screen Checkbox */}
                       <div className="flex items-center justify-center h-full w-full no-print">
                         {checkedBy === spouseAName ? (
                           <div
-                            className="w-6 h-6 flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-pink-100 hover:scale-105 active:scale-95 transition-all"
+                            className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-500 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-pink-100 hover:scale-105 active:scale-95 transition-all"
                             title={`${spouseAName} 완료 (+10 XP)`}
                           >
                             🤵{initialA}
                           </div>
                         ) : checkedBy === spouseBName ? (
                           <div
-                            className="w-6 h-6 flex items-center justify-center rounded-full bg-indigo-600 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-indigo-100 hover:scale-105 active:scale-95 transition-all"
+                            className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-600 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-indigo-100 hover:scale-105 active:scale-95 transition-all"
                             title={`${spouseBName} 완료 (+10 XP)`}
                           >
                             👰{initialB}
                           </div>
                         ) : checkedBy === true ? (
                           <div
-                            className="w-5 h-5 flex items-center justify-center rounded bg-indigo-650 text-white"
+                            className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded bg-indigo-650 text-white shadow-xs"
                           >
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            <Check className="w-5 h-5 sm:w-3.5 sm:h-3.5 stroke-[3]" />
                           </div>
                         ) : (
                           <div
-                            className="w-5 h-5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 hover:bg-slate-50 transition-colors text-slate-300 hover:text-pink-400"
+                            className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 hover:bg-slate-50 transition-colors text-slate-300 hover:text-pink-400 text-sm sm:text-xs font-bold"
                           >
-                            <span className="text-[10px] font-bold">+</span>
+                            <span>+</span>
                           </div>
                         )}
                       </div>

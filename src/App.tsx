@@ -252,6 +252,7 @@ export default function App() {
   });
 
   // 2. Control/View States
+  const [activeTab, setActiveTab] = useState<'all' | 'daily' | 'ntimes' | 'weekly' | 'monthly' | 'stats'>('all');
   const [printModel, setPrintModel] = useState<'blank' | 'checked'>('blank');
   const [copiedState, setCopiedState] = useState<'none' | 'share' | 'direct'>('none');
   const [showGitGuide, setShowGitGuide] = useState(false);
@@ -1468,6 +1469,72 @@ export default function App() {
 
       </div>
 
+      {/* Mobile-Friendly Navigation Tabs (Hidden on Print, and available on all screens with horizontal scroll) */}
+      <div className="no-print mb-4 max-w-4xl mx-auto bg-slate-100 p-1.5 rounded-xl border border-slate-200/60 shadow-xs">
+        <div className="flex overflow-x-auto scrollbar-none gap-1 py-0.5 px-0.5">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`px-3 py-2 text-xs font-black rounded-lg whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'all'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100/55 scale-[1.02]'
+                : 'text-slate-650 hover:bg-white hover:text-slate-900'
+            }`}
+          >
+            <span>📋</span> 전체 보기
+          </button>
+          <button
+            onClick={() => setActiveTab('daily')}
+            className={`px-3 py-2 text-xs font-black rounded-lg whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'daily'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100/55 scale-[1.02]'
+                : 'text-slate-650 hover:bg-white hover:text-slate-900'
+            }`}
+          >
+            <span>☀️</span> 매일 & 수시로
+          </button>
+          <button
+            onClick={() => setActiveTab('ntimes')}
+            className={`px-3 py-2 text-xs font-black rounded-lg whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'ntimes'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100/55 scale-[1.02]'
+                : 'text-slate-650 hover:bg-white hover:text-slate-900'
+            }`}
+          >
+            <span>🔄</span> 이번 주 N번
+          </button>
+          <button
+            onClick={() => setActiveTab('weekly')}
+            className={`px-3 py-2 text-xs font-black rounded-lg whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'weekly'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100/55 scale-[1.02]'
+                : 'text-slate-650 hover:bg-white hover:text-slate-900'
+            }`}
+          >
+            <span>🧼</span> 주 1회 집중
+          </button>
+          <button
+            onClick={() => setActiveTab('monthly')}
+            className={`px-3 py-2 text-xs font-black rounded-lg whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'monthly'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100/55 scale-[1.02]'
+                : 'text-slate-650 hover:bg-white hover:text-slate-900'
+            }`}
+          >
+            <span>💖</span> 월간 / 퀘스트
+          </button>
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={`px-3 py-2 text-xs font-black rounded-lg whitespace-nowrap shrink-0 transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'stats'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100/55 scale-[1.02]'
+                : 'text-slate-650 hover:bg-white hover:text-slate-900'
+            }`}
+          >
+            <span>🏰</span> 레벨 / 통계
+          </button>
+        </div>
+      </div>
+
       {/* Main A4 styled printable sheet container */}
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-3 sm:p-5 md:p-8 print-container relative overflow-hidden">
@@ -1492,80 +1559,96 @@ export default function App() {
           </div>
 
           {/* House RPG Interior Game Board */}
-          <HouseInterior
-            cumulativeHomeXp={cumulativeHomeXp + (getWeeklySettleSummary()?.thisWeekChoresXpTotal || 0)}
-            spouseAName={spouseAName}
-            spouseBName={spouseBName}
-          />
+          <div className={`${activeTab === 'all' || activeTab === 'stats' ? 'block' : 'hidden md:block'} print:block`}>
+            <HouseInterior
+              cumulativeHomeXp={cumulativeHomeXp + (getWeeklySettleSummary()?.thisWeekChoresXpTotal || 0)}
+              spouseAName={spouseAName}
+              spouseBName={spouseBName}
+            />
+          </div>
 
           {/* Comprehensive Statistics bar */}
-          <StatsSummary
-            dailyTasks={dailyTasks}
-            nTimesTasks={nTimesTasks}
-            weeklyTasks={weeklyTasks}
-            monthlyTasks={monthlyTasks}
-            relationshipQuests={relationshipQuests}
-            printModel={printModel}
-            spouseAName={spouseAName}
-            spouseBName={spouseBName}
-          />
+          <div className={`${activeTab === 'all' || activeTab === 'stats' ? 'block' : 'hidden md:block'} print:block`}>
+            <StatsSummary
+              dailyTasks={dailyTasks}
+              nTimesTasks={nTimesTasks}
+              weeklyTasks={weeklyTasks}
+              monthlyTasks={monthlyTasks}
+              relationshipQuests={relationshipQuests}
+              printModel={printModel}
+              spouseAName={spouseAName}
+              spouseBName={spouseBName}
+            />
+          </div>
 
           {/* ➊ 매일 & 수시로 */}
-          <DailyChecklist
-            tasks={dailyTasks}
-            onToggleCheck={handleToggleDailyCheck}
-            onAddTask={handleDailyAddTask}
-            onDeleteTask={handleDailyDeleteTask}
-            printModel={printModel}
-            spouseAName={spouseAName}
-            spouseBName={spouseBName}
-          />
+          <div className={`${activeTab === 'all' || activeTab === 'daily' ? 'block' : 'hidden md:block'} print:block`}>
+            <DailyChecklist
+              tasks={dailyTasks}
+              onToggleCheck={handleToggleDailyCheck}
+              onAddTask={handleDailyAddTask}
+              onDeleteTask={handleDailyDeleteTask}
+              printModel={printModel}
+              spouseAName={spouseAName}
+              spouseBName={spouseBName}
+            />
+          </div>
 
           {/* ➋ 이번 주 N번 */}
-          <NTimeChecklist
-            tasks={nTimesTasks}
-            onToggleCheck={handleToggleNTimesCheck}
-            onAddTask={handleNTimesAddTask}
-            onDeleteTask={handleNTimesDeleteTask}
-            printModel={printModel}
-            spouseAName={spouseAName}
-            spouseBName={spouseBName}
-          />
+          <div className={`${activeTab === 'all' || activeTab === 'ntimes' ? 'block' : 'hidden md:block'} print:block`}>
+            <NTimeChecklist
+              tasks={nTimesTasks}
+              onToggleCheck={handleToggleNTimesCheck}
+              onAddTask={handleNTimesAddTask}
+              onDeleteTask={handleNTimesDeleteTask}
+              printModel={printModel}
+              spouseAName={spouseAName}
+              spouseBName={spouseBName}
+            />
+          </div>
 
           {/* ➌ 주 1회 집중 */}
-          <WeeklyChecklist
-            tasks={weeklyTasks}
-            onToggleCheck={handleToggleWeeklyCheck}
-            onAddTask={handleWeeklyAddTask}
-            onDeleteTask={handleWeeklyDeleteTask}
-            printModel={printModel}
-            spouseAName={spouseAName}
-            spouseBName={spouseBName}
-          />
+          <div className={`${activeTab === 'all' || activeTab === 'weekly' ? 'block' : 'hidden md:block'} print:block`}>
+            <WeeklyChecklist
+              tasks={weeklyTasks}
+              onToggleCheck={handleToggleWeeklyCheck}
+              onAddTask={handleWeeklyAddTask}
+              onDeleteTask={handleWeeklyDeleteTask}
+              printModel={printModel}
+              spouseAName={spouseAName}
+              spouseBName={spouseBName}
+            />
+          </div>
 
           {/* ➍ 월 1회 로테이션 */}
-          <MonthlyRotation
-            tasks={monthlyTasks}
-            onSelectTask={handleSelectMonthlyTask}
-            onToggleComplete={handleToggleMonthlyComplete}
-            printModel={printModel}
-            spouseAName={spouseAName}
-            spouseBName={spouseBName}
-          />
+          <div className={`${activeTab === 'all' || activeTab === 'monthly' ? 'block' : 'hidden md:block'} print:block`}>
+            <MonthlyRotation
+              tasks={monthlyTasks}
+              onSelectTask={handleSelectMonthlyTask}
+              onToggleComplete={handleToggleMonthlyComplete}
+              printModel={printModel}
+              spouseAName={spouseAName}
+              spouseBName={spouseBName}
+            />
+          </div>
 
           {/* 💖 부부 관계 퀘스트 */}
-          <RelationshipQuestList
-            quests={relationshipQuests}
-            onToggleQuest={handleToggleQuest}
-            spouseAName={spouseAName}
-            spouseBName={spouseBName}
-          />
+          <div className={`${activeTab === 'all' || activeTab === 'monthly' ? 'block' : 'hidden md:block'} print:block`}>
+            <RelationshipQuestList
+              quests={relationshipQuests}
+              onToggleQuest={handleToggleQuest}
+              spouseAName={spouseAName}
+              spouseBName={spouseBName}
+            />
+          </div>
 
           {/* 📝 메모란 */}
-          <MemoSection
-            memo={memo}
-            onMemoChange={setMemo}
-          />
+          <div className={`${activeTab === 'all' || activeTab === 'monthly' ? 'block' : 'hidden md:block'} print:block`}>
+            <MemoSection
+              memo={memo}
+              onMemoChange={setMemo}
+            />
+          </div>
 
           {/* Core watermark foot decoration */}
           <div className="mt-6 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-2">

@@ -92,31 +92,31 @@ export const WeeklyChecklist: React.FC<WeeklyChecklistProps> = ({
                     </div>
                   </td>
                   <td
-                    className="py-1.5 sm:py-2.5 text-center border-l border-slate-200 cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                    className="py-3 sm:py-2.5 text-center border-l border-slate-200 cursor-pointer select-none hover:bg-slate-50 transition-colors"
                     onClick={() => onToggleCheck(task.id)}
                   >
                     {/* Screen checkbox */}
                     <div className="flex items-center justify-center h-full w-full no-print">
                       {task.completedBy === spouseAName ? (
                         <div
-                          className="w-6 h-6 flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-pink-100 hover:scale-105"
+                          className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-500 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-pink-100 hover:scale-105"
                           title={`${spouseAName} 완료 (+30 XP)`}
                         >
                           🤵{initialA}
                         </div>
                       ) : task.completedBy === spouseBName ? (
                         <div
-                          className="w-6 h-6 flex items-center justify-center rounded-full bg-indigo-600 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-indigo-100 hover:scale-105"
+                          className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-600 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-indigo-100 hover:scale-105"
                           title={`${spouseBName} 완료 (+30 XP)`}
                         >
                           👰{initialB}
                         </div>
                       ) : task.completed ? (
-                        <div className="w-5 h-5 flex items-center justify-center rounded bg-indigo-600 text-white shadow-sm">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        <div className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded bg-indigo-600 text-white shadow-sm">
+                          <Check className="w-5 h-5 sm:w-3.5 sm:h-3.5 stroke-[3]" />
                         </div>
                       ) : (
-                        <div className="w-5 h-5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 text-slate-350 hover:text-pink-400 text-[10px] font-bold">
+                        <div className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 text-slate-350 hover:text-pink-400 text-sm sm:text-xs font-bold">
                           +
                         </div>
                       )}
