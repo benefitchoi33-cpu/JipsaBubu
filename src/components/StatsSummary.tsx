@@ -190,7 +190,12 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
             </div>
             <div className="mt-3.5 flex items-baseline justify-between border-t border-amber-100/40 pt-2">
               <span className="text-xs text-slate-400 font-bold">주간 총합 시너지</span>
-              <span className="text-lg font-black text-amber-600 font-mono">+{xpA + xpB} <span className="text-xs font-bold text-amber-400">XP</span></span>
+              <div className="text-right">
+                <span className="text-lg font-black text-amber-600 font-mono">+{xpA + xpB + (isHealthyBalance ? 50 : 0)} <span className="text-xs font-bold text-amber-400">XP</span></span>
+                {isHealthyBalance && (
+                  <p className="text-[9px] text-emerald-600 font-bold mt-0.5 animate-pulse">배려 보너스 +50 XP 포함 💝</p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -217,7 +222,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
 
         {/* Real-time Task Completion Progress Bars */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 bg-white p-4 rounded-xl border border-slate-200">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 col-span-1">
             <div className="flex justify-between items-center text-xs text-slate-500 font-semibold">
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-indigo-500" />
@@ -230,7 +235,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 col-span-1">
             <div className="flex justify-between items-center text-xs text-slate-500 font-semibold">
               <span className="flex items-center gap-1 flex-wrap">
                 <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
@@ -243,7 +248,7 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 col-span-2 sm:col-span-1">
             <div className="flex justify-between items-center text-xs text-slate-500 font-black">
               <span>🛡️ 이번 주 종합 청정</span>
               <span className="text-indigo-600">{overallPercentage}% 완료</span>
@@ -253,8 +258,8 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-center pt-2 lg:pt-0">
-            <p className="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-150 font-medium leading-tight">
+          <div className="col-span-2 lg:col-span-1 flex items-center justify-center pt-2 lg:pt-0">
+            <p className="w-full text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-150 font-medium leading-tight text-center lg:text-left">
               {getMotivationalMsg()}
             </p>
           </div>

@@ -49,17 +49,23 @@ export const WeeklyChecklist: React.FC<WeeklyChecklistProps> = ({
         </p>
       </div>
 
+      {/* Mobile Swipe Hint Indicator */}
+      <div className="text-[10px] text-slate-500 bg-slate-50 rounded-lg p-1.5 flex items-center justify-between no-print sm:hidden border border-slate-200 mb-1.5 animate-pulse">
+        <span className="font-semibold">👈 좌우로 밀어서 완료 여부를 간편히 입력하세요</span>
+        <span className="font-bold">↔</span>
+      </div>
+
       <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
-        <table className="w-full text-sm text-left border-collapse bg-white">
+        <table className="w-full text-xs sm:text-sm text-left border-collapse bg-white">
           <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
             <tr>
-              <th className="py-2.5 px-3 w-32">구 분</th>
-              <th className="py-2.5 px-3">청 소 항 목 (세부 내용)</th>
-              <th className="py-2.5 text-center w-16 border-l border-slate-200">완 료</th>
-              <th className="py-2.5 text-center w-10 border-l border-slate-200 no-print">삭제</th>
+              <th className="py-2 sm:py-2.5 px-2 sm:px-3 w-24 sm:w-32">구 분</th>
+              <th className="py-2 sm:py-2.5 px-2 sm:px-3 min-w-[130px]">청 소 항 목 (세부 내용)</th>
+              <th className="py-2 sm:py-2.5 text-center w-14 sm:w-16 border-l border-slate-200">완 료</th>
+              <th className="py-2 sm:py-2.5 text-center w-10 border-l border-slate-200 no-print">삭제</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 text-slate-800">
+          <tbody className="divide-y divide-slate-200 text-slate-850">
             {tasks.map((task) => {
               const shouldShowChecked = printModel === 'checked' ? task.completed : false;
               const initialA = spouseAName.charAt(0);
@@ -67,10 +73,10 @@ export const WeeklyChecklist: React.FC<WeeklyChecklistProps> = ({
 
               return (
                 <tr key={task.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="py-2.5 px-3 font-semibold text-slate-600 bg-slate-50/30">
+                  <td className="py-1.5 sm:py-2.5 px-2 sm:px-3 font-semibold text-slate-600 bg-slate-50/30">
                     {task.category}
                   </td>
-                  <td className="py-2.5 px-3">
+                  <td className="py-1.5 sm:py-2.5 px-2 sm:px-3">
                     <div className="flex items-center justify-between group">
                       <span className="break-all">{task.name}</span>
                       {task.isCustom && (
@@ -86,7 +92,7 @@ export const WeeklyChecklist: React.FC<WeeklyChecklistProps> = ({
                     </div>
                   </td>
                   <td
-                    className="py-2.5 text-center border-l border-slate-200 cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                    className="py-1.5 sm:py-2.5 text-center border-l border-slate-200 cursor-pointer select-none hover:bg-slate-50 transition-colors"
                     onClick={() => onToggleCheck(task.id)}
                   >
                     {/* Screen checkbox */}

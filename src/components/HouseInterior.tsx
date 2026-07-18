@@ -1,5 +1,5 @@
-import React from 'react';
-import { Sparkles, Lock, Trophy, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, Lock, Trophy, Heart, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface HouseInteriorProps {
   cumulativeHomeXp: number;
@@ -59,6 +59,7 @@ export const HouseInterior: React.FC<HouseInteriorProps> = ({
   spouseAName,
   spouseBName,
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const currentLevelInfo = getLevelInfo(cumulativeHomeXp);
   const nextLevelInfo = LEVEL_STEPS[currentLevelInfo.level] || null;
 
@@ -70,143 +71,169 @@ export const HouseInterior: React.FC<HouseInteriorProps> = ({
     progressPercentage = Math.min(Math.max(Math.round((progress / range) * 100), 0), 100);
   }
 
+  const unlockedCount = DECOR_COLLECTION.filter(item => currentLevelInfo.level >= item.unlockLevel).length;
+
   return (
-    <div className="w-full mb-6 no-print" id="house-interior-module">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2.5 gap-1">
-        <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-          <span>🏡 우리 집 미니 인테리어</span>
-          <span className="text-xs font-normal text-slate-500">(누적 XP를 모아 가구와 소품을 채워가는 공간)</span>
-        </h3>
-        <span className="text-xs text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full">
-          RPG 레벨 성장모드 활성화
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        {/* 1. Cozy living room visual box - 7 Cols */}
-        <div className="lg:col-span-7 bg-indigo-950 rounded-2xl p-5 border border-indigo-900 shadow-md relative overflow-hidden h-[240px] flex flex-col justify-between">
-          {/* Sky background inside room window */}
-          <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-indigo-900/60 to-transparent pointer-events-none" />
-          
-          {/* Wall Grid and floor */}
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-amber-800/80 border-t border-amber-900/40 z-0">
-            {/* Wooden Floor Pattern lines */}
-            <div className="w-full h-full opacity-10 bg-[linear-gradient(90deg,transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[size:28px_100%]" />
-          </div>
-
-          {/* Core Info Overlay (Level badge) */}
-          <div className="relative z-10 flex items-start justify-between">
-            <div className="bg-slate-900/80 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-slate-700 max-w-[200px]">
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg">{currentLevelInfo.icon}</span>
-                <span className="text-pink-400 font-extrabold text-[11px] uppercase tracking-wide">LEVEL {currentLevelInfo.level}</span>
-              </div>
-              <p className="text-xs font-black text-white mt-0.5">{currentLevelInfo.title}</p>
-              <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
-                {spouseAName}🤵 ♥ 👰{spouseBName}
-              </p>
+    <div className="w-full mb-4 no-print bg-gradient-to-r from-indigo-50/40 to-pink-50/20 rounded-xl border border-indigo-100 p-2.5 sm:p-3 shadow-xs" id="house-interior-module">
+      
+      {/* 1. Collapsed Row Layout (Simplified View) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0" onClick={() => setIsExpanded(!isExpanded)}>
+          <span className="text-xl shrink-0 select-none">{currentLevelInfo.icon}</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs font-black text-rose-600 bg-rose-50/85 border border-rose-100 rounded px-1 text-[10px]">
+                LEVEL {currentLevelInfo.level}
+              </span>
+              <h4 className="text-xs sm:text-sm font-extrabold text-slate-800 truncate">
+                우리 집: <span className="text-indigo-650">{currentLevelInfo.title}</span>
+              </h4>
+              <span className="text-[10px] text-slate-400 font-semibold hidden md:inline">
+                ({spouseAName}🤵 ♥ 👰{spouseBName})
+              </span>
             </div>
-
-            <div className="bg-slate-900/80 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-800 text-right">
-              <span className="text-[10px] text-indigo-300 font-bold tracking-wider">누적 성장 경험치</span>
-              <p className="text-sm font-black text-emerald-450 font-mono tracking-tight text-white">
-                {cumulativeHomeXp} <span className="text-[10px] text-slate-400">XP</span>
-              </p>
-            </div>
+            
+            {/* Ultra Simple progress subtext info */}
+            <p className="text-[10px] text-slate-500 font-medium">
+              누적 성장: <strong className="text-slate-700 font-mono">{cumulativeHomeXp} XP</strong> 
+              {nextLevelInfo ? (
+                <> (다음 레벨까지 <strong className="text-slate-600 font-mono">{nextLevelInfo.minXp - cumulativeHomeXp} XP</strong> 필요)</>
+              ) : (
+                <span className="text-amber-600 font-bold ml-1">🎉 만렙 달성!</span>
+              )}
+            </p>
           </div>
+        </div>
 
-          {/* Living Room Stage for Decors */}
-          <div className="relative flex-1 w-full mt-3">
-            {DECOR_COLLECTION.map((item) => {
-              const isUnlocked = currentLevelInfo.level >= item.unlockLevel;
-              if (!isUnlocked) return null;
-
-              return (
-                <div
-                  key={item.id}
-                  className={`absolute ${item.positionClass} transition-all duration-700 ease-out select-none transform hover:scale-135 cursor-help`}
-                  title={`${item.name} (Lv.${item.unlockLevel} 해금!) - ${item.desc}`}
-                >
-                  <span className="text-3xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] block leading-none">
-                    {item.emoji}
-                  </span>
-                </div>
-              );
-            })}
-
-            {/* If Level 1 show empty text */}
-            {currentLevelInfo.level === 1 && (
-              <p className="absolute bottom-16 left-0 right-0 text-center text-[10px] text-slate-400 font-medium">
-                📦 살림살이를 채워볼까요? 조금만 청소해도 100 XP 달성 시 2레벨 해금!
-              </p>
-            )}
-          </div>
-
-          {/* Level Progress Bar inside box */}
-          <div className="relative z-10 bg-slate-900/85 backdrop-blur-xs p-2 rounded-xl border border-slate-800/80 mt-1">
-            <div className="flex justify-between text-[9px] font-bold text-slate-400 mb-1">
-              <span>{currentLevelInfo.title}</span>
-              <span>{nextLevelInfo ? `${cumulativeHomeXp} / ${nextLevelInfo.minXp} XP (${progressPercentage}%)` : '최고 레벨 🎉'}</span>
-              <span>{nextLevelInfo ? nextLevelInfo.title : '집안일 정복!'}</span>
-            </div>
-            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+        {/* Compact Level bar & Collapse Toggle */}
+        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex-1 sm:w-40 md:w-56 flex items-center gap-2">
+            <div className="w-full h-2 bg-slate-200/80 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 rounded-full transition-all duration-700" 
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
+            <span className="text-[10px] text-indigo-600 font-mono font-bold shrink-0">{progressPercentage}%</span>
           </div>
-        </div>
 
-        {/* 2. Collection checklist with lock indicators - 5 Cols */}
-        <div className="lg:col-span-5 bg-white rounded-2xl p-4 border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 mb-2">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                <Trophy className="w-3.5 h-3.5 text-amber-500" />
-                우리 집 꾸미기 도감 ({DECOR_COLLECTION.filter(item => currentLevelInfo.level >= item.unlockLevel).length}/{DECOR_COLLECTION.length})
-              </span>
-              <span className="text-[10px] text-slate-400 font-semibold">청정 레벨업 자동 보상</span>
-            </div>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="px-2.5 py-1.5 bg-white text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0"
+          >
+            <span>🏡 거실 꾸미기 {isExpanded ? '접기' : '열기'}</span>
+            <span className="text-[10px] bg-slate-100 px-1 rounded text-slate-500">{unlockedCount}종 해금</span>
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Expanded RPG Room & Collection (Original Detail View - Collapsible) */}
+      {isExpanded && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-3 pt-3 border-t border-indigo-100 animate-fadeIn">
+          
+          {/* Cozy living room visual room - 7 Cols */}
+          <div className="lg:col-span-7 bg-indigo-950 rounded-xl p-4 border border-indigo-900 shadow-inner relative overflow-hidden h-[200px] flex flex-col justify-between">
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-indigo-900/60 to-transparent pointer-events-none" />
             
-            {/* Scrollable grid container */}
-            <div className="grid grid-cols-2 gap-1.5 max-h-[145px] overflow-y-auto pr-1">
+            {/* Wall Grid and floor */}
+            <div className="absolute inset-x-0 bottom-0 h-12 bg-amber-800/80 border-t border-amber-900/45 z-0">
+              <div className="w-full h-full opacity-10 bg-[linear-gradient(90deg,transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[size:28px_100%]" />
+            </div>
+
+            {/* Core Info Overlay */}
+            <div className="relative z-10 flex items-start justify-between">
+              <div className="bg-slate-900/85 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-700 max-w-[170px]">
+                <p className="text-[10.5px] font-black text-white">{currentLevelInfo.title}</p>
+                <p className="text-[8px] text-slate-400 mt-0.5 font-bold">
+                  {spouseAName}🤵 ♥ 👰{spouseBName}
+                </p>
+              </div>
+
+              <div className="bg-slate-900/85 backdrop-blur-xs px-2 py-0.5 rounded-lg border border-slate-800">
+                <span className="text-[8px] text-slate-450 font-bold block leading-none">누적 XP</span>
+                <span className="text-xs font-black text-white font-mono">{cumulativeHomeXp} XP</span>
+              </div>
+            </div>
+
+            {/* Living Room Stage for Decors */}
+            <div className="relative flex-1 w-full mt-2">
               {DECOR_COLLECTION.map((item) => {
                 const isUnlocked = currentLevelInfo.level >= item.unlockLevel;
+                if (!isUnlocked) return null;
+
                 return (
-                  <div 
+                  <div
                     key={item.id}
-                    className={`flex items-center gap-1.5 p-1 px-2 rounded-lg border text-left transition-all ${
-                      isUnlocked 
-                        ? 'border-indigo-100 bg-indigo-50/20 text-slate-800' 
-                        : 'border-slate-100 bg-slate-50/50 text-slate-400 opacity-60'
-                    }`}
+                    className={`absolute ${item.positionClass} transition-all duration-700 ease-out select-none transform hover:scale-135 cursor-help`}
+                    title={`${item.name} (Lv.${item.unlockLevel} 해금!) - ${item.desc}`}
                   >
-                    <span className="text-xl shrink-0 leading-none filter drop-shadow-sm select-none">
-                      {isUnlocked ? item.emoji : '🔒'}
+                    <span className="text-2xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] block leading-none">
+                      {item.emoji}
                     </span>
-                    <div className="min-w-0">
-                      <p className="text-[10.5px] font-bold leading-tight truncate">{item.name}</p>
-                      <p className="text-[8px] font-semibold text-slate-400">
-                        {isUnlocked ? '꾸미기 해금' : `Lv.${item.unlockLevel} 해금`}
-                      </p>
-                    </div>
                   </div>
                 );
               })}
+
+              {currentLevelInfo.level === 1 && (
+                <p className="absolute bottom-10 left-0 right-0 text-center text-[10px] text-slate-400 font-medium">
+                  📦 집안일을 처리하여 100 XP 달성하면 2레벨 가구들이 해금됩니다!
+                </p>
+              )}
+            </div>
+            
+            <p className="relative z-10 text-[9px] text-center text-slate-300 font-bold bg-slate-900/40 py-0.5 rounded">
+              ※ 캐릭터 가구는 레벨이 높아질수록 자동으로 방에 배치됩니다
+            </p>
+          </div>
+
+          {/* Decor collection catalog checklist */}
+          <div className="lg:col-span-5 bg-white rounded-xl p-3 border border-slate-200 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1 mb-1.5">
+                <span className="text-[11px] font-extrabold text-slate-700 flex items-center gap-1">
+                  <Trophy className="w-3 h-3 text-amber-500 fill-amber-300" />
+                  우리 집 전용 꾸미기 도감 ({unlockedCount}/{DECOR_COLLECTION.length})
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-1 max-h-[105px] overflow-y-auto pr-1">
+                {DECOR_COLLECTION.map((item) => {
+                  const isUnlocked = currentLevelInfo.level >= item.unlockLevel;
+                  return (
+                    <div 
+                      key={item.id}
+                      className={`flex items-center gap-1.5 p-1 px-1.5 rounded border text-left transition-all ${
+                        isUnlocked 
+                          ? 'border-indigo-100 bg-indigo-50/20 text-slate-800' 
+                          : 'border-slate-100 bg-slate-50/50 text-slate-400 opacity-60'
+                      }`}
+                    >
+                      <span className="text-base shrink-0 leading-none select-none">
+                        {isUnlocked ? item.emoji : '🔒'}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[10.5px] font-bold leading-tight truncate">{item.name}</p>
+                        <p className="text-[8px] font-semibold text-slate-400">
+                          {isUnlocked ? '꾸미기 해금됨' : `Lv.${item.unlockLevel} 해금`}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="bg-rose-50/30 p-1.5 rounded-lg border border-rose-100/50 flex items-start gap-1 mt-1.5">
+              <span className="text-[10px] mt-0.5 leading-none">💡</span>
+              <p className="text-[9px] text-slate-500 font-medium leading-normal">
+                주간 살림 정산 시 고등급(S등급 <span className="font-bold text-indigo-600">+100 XP</span>) 획득으로 빠르게 방을 확장하세요!
+              </p>
             </div>
           </div>
 
-          <div className="bg-rose-50/40 p-2 rounded-xl border border-rose-100/50 flex items-start gap-1.5 mt-2 lg:mt-0">
-            <span className="text-xs mt-0.5">💡</span>
-            <p className="text-[9.5px] text-slate-500 font-medium leading-normal">
-              매일 집안일을 끝내고 <span className="font-bold text-rose-500">주간 살림 정산</span>을 완료하면, 완료 등급 보너스(S등급시 <span className="font-bold text-indigo-600">+100 XP</span>)가 추가로 주어져 빠르게 레벨업할 수 있습니다!
-            </p>
-          </div>
         </div>
-
-      </div>
+      )}
     </div>
   );
 };

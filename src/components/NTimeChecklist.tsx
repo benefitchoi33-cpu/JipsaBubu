@@ -58,20 +58,26 @@ export const NTimeChecklist: React.FC<NTimeChecklistProps> = ({
         </p>
       </div>
 
+      {/* Mobile Swipe Hint Indicator */}
+      <div className="text-[10px] text-slate-500 bg-slate-50 rounded-lg p-2 flex items-center justify-between no-print sm:hidden border border-slate-200 mb-1.5 animate-pulse">
+        <span className="font-semibold">👈 좌우로 밀어서 실행 횟수와 비고란을 확인하세요</span>
+        <span className="font-bold">↔</span>
+      </div>
+
       <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
-        <table className="w-full text-sm text-left border-collapse bg-white">
+        <table className="w-full text-xs sm:text-sm text-left border-collapse bg-white">
           <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
             <tr>
-              <th className="py-2.5 px-3">청 소 항 목</th>
-              <th className="py-2.5 px-3 text-center w-36 border-l border-slate-200">실 행 횟 수</th>
-              <th className="py-2.5 px-3 text-left w-32 border-l border-slate-200">비 고</th>
-              <th className="py-2.5 text-center w-10 border-l border-slate-200 no-print">삭제</th>
+              <th className="py-2 sm:py-2.5 px-2 sm:px-3 min-w-[140px]">청 소 항 목</th>
+              <th className="py-2 sm:py-2.5 px-2 sm:px-3 text-center w-28 sm:w-36 border-l border-slate-200">실 행 횟 수</th>
+              <th className="py-2 sm:py-2.5 px-2 sm:px-3 text-left w-24 sm:w-32 border-l border-slate-200">비 고</th>
+              <th className="py-2 sm:py-2.5 text-center w-10 border-l border-slate-200 no-print">삭제</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 text-slate-800">
+          <tbody className="divide-y divide-slate-200 text-slate-850">
             {tasks.map((task) => (
               <tr key={task.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="py-2.5 px-3 font-medium">
+                <td className="py-1.5 sm:py-2.5 px-2 sm:px-3 font-medium">
                   <div className="flex items-center justify-between group">
                     <span className="break-all">{task.name}</span>
                     {task.isCustom && (
@@ -86,7 +92,7 @@ export const NTimeChecklist: React.FC<NTimeChecklistProps> = ({
                     )}
                   </div>
                 </td>
-                <td className="py-2.5 px-3 border-l border-slate-200 text-center">
+                <td className="py-1.5 sm:py-2.5 px-2 sm:px-3 border-l border-slate-200 text-center">
                   <div className="flex items-center justify-center gap-2">
                     {Array.from({ length: task.targetCount }).map((_, i) => {
                       const checkedBy = task.completedBy ? task.completedBy[i] : (task.completedCount > i ? spouseAName : null);
@@ -133,10 +139,10 @@ export const NTimeChecklist: React.FC<NTimeChecklistProps> = ({
                     })}
                   </div>
                 </td>
-                <td className="py-2.5 px-3 border-l border-slate-200 text-slate-500 text-xs font-semibold">
+                <td className="py-1.5 sm:py-2.5 px-2 sm:px-3 border-l border-slate-200 text-slate-500 text-xs font-semibold">
                   {task.note}
                 </td>
-                <td className="py-2.5 text-center border-l border-slate-200 no-print">
+                <td className="py-1.5 sm:py-2.5 text-center border-l border-slate-200 no-print">
                   {task.isCustom && (
                     <button
                       onClick={() => onDeleteTask(task.id)}

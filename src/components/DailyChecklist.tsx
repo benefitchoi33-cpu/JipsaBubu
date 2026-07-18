@@ -49,23 +49,29 @@ export const DailyChecklist: React.FC<DailyChecklistProps> = ({
         </p>
       </div>
 
+      {/* Mobile Swipe Hint Indicator */}
+      <div className="text-[10px] text-slate-500 bg-slate-50 rounded-lg p-2 flex items-center justify-between no-print sm:hidden border border-slate-200 mb-1.5 animate-pulse">
+        <span className="font-semibold">👈 좌우로 밀어서 요일별(월~일) 청소를 체크하세요</span>
+        <span className="font-bold">↔</span>
+      </div>
+
       <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
-        <table className="w-full text-sm text-left border-collapse bg-white">
+        <table className="w-full text-xs sm:text-sm text-left border-collapse bg-white">
           <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
             <tr>
-              <th className="py-2.5 px-3 min-w-[200px]">청 소 항 목</th>
+              <th className="py-2 sm:py-2.5 px-2 sm:px-3 min-w-[150px] sm:min-w-[200px]">청 소 항 목</th>
               {DAYS_OF_WEEK.map((day) => (
-                <th key={day} className="py-2.5 text-center w-11 border-l border-slate-200">
+                <th key={day} className="py-2 sm:py-2.5 text-center w-9 sm:w-11 border-l border-slate-200">
                   {day}
                 </th>
               ))}
-              <th className="py-2.5 text-center w-10 border-l border-slate-200 no-print">주석</th>
+              <th className="py-2 sm:py-2.5 text-center w-10 border-l border-slate-200 no-print">주석</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 text-slate-800">
+          <tbody className="divide-y divide-slate-200 text-slate-850">
             {tasks.map((task) => (
               <tr key={task.id} className="hover:bg-slate-50/50 transition-colors">
-                <td className="py-2 px-3 font-medium flex items-center justify-between group">
+                <td className="py-1.5 sm:py-2 px-2 sm:px-3 font-medium flex items-center justify-between group">
                   <span className="break-all">{task.name}</span>
                   {task.isCustom && (
                     <button
@@ -88,7 +94,7 @@ export const DailyChecklist: React.FC<DailyChecklistProps> = ({
                   return (
                     <td
                       key={day}
-                      className="py-2 text-center border-l border-slate-200 cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                      className="py-1.5 sm:py-2 text-center border-l border-slate-200 cursor-pointer select-none hover:bg-slate-50 transition-colors"
                       onClick={() => onToggleCheck(task.id, day)}
                     >
                       {/* Interactive Screen Checkbox */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DailyChecklist } from './components/DailyChecklist';
 import { NTimeChecklist } from './components/NTimeChecklist';
 import { WeeklyChecklist } from './components/WeeklyChecklist';
@@ -6,6 +6,8 @@ import { MonthlyRotation } from './components/MonthlyRotation';
 import { MemoSection } from './components/MemoSection';
 import { StatsSummary } from './components/StatsSummary';
 import { DailyTask, NTimesTask, WeeklyTask, MonthlyRotationItem, RelationshipQuest } from './types';
+import { db, saveHouseState, checkHouseExists, generateSyncCode } from './lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 import {
   INITIAL_DAILY_SUBMISSIONS,
   INITIAL_N_TIMES_TASKS,
@@ -109,6 +111,27 @@ const getInitialStateFromUrlOrStorage = () => {
 };
 
 export default function App() {
+  // 0. Cloud Firebase Real-time Sync States
+  const [houseCode, setHouseCode] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlCode = params.get('house');
+      if (urlCode && /^\d{6}$/.test(urlCode)) {
+        return urlCode;
+      }
+      return localStorage.getItem('house_cleaning_sync_code') || '';
+    }
+    return '';
+  });
+
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error' | 'connected'>('idle');
+  const [syncErrorMessage, setSyncErrorMessage] = useState<string | null>(null);
+  const [syncCodeInput, setSyncCodeInput] = useState('');
+  
+  // Robust refs to track the latest state and last synced state to prevent infinite sync loops
+  const latestStateRef = useRef<any>(null);
+  const lastSyncedStateRef = useRef<any>(null);
+
   // 1. Core States with Bulletproof Lazy State Initialization to prevent storage flickers
   const [weekStart, setWeekStart] = useState<string>(() => {
     const loaded = getInitialStateFromUrlOrStorage();
@@ -191,7 +214,118 @@ export default function App() {
   const [isSettlementResultOpen, setIsSettlementResultOpen] = useState(false);
   const [settlementData, setSettlementData] = useState<any>(null);
 
-  // Auto save to localStorage only when states are properly hydrated
+  // Keep the latestStateRef up-to-date with current component states on every single render
+  latestStateRef.current = {
+    weekStart,
+    weekEnd,
+    dailyTasks,
+    nTimesTasks,
+    weeklyTasks,
+    monthlyTasks,
+    memo,
+    spouseAName,
+    spouseBName,
+    relationshipQuests,
+    cumulativeHomeXp,
+    spouseAOverallXp,
+    spouseBOverallXp,
+  };
+
+  // Save houseCode to localStorage whenever it changes (e.g., when loaded from URL query param)
+  useEffect(() => {
+    if (houseCode) {
+      localStorage.setItem('house_cleaning_sync_code', houseCode);
+    }
+  }, [houseCode]);
+
+  // 1-A. Real-time Firebase Subscriber Effect
+  useEffect(() => {
+    if (!houseCode) {
+      setSyncStatus('idle');
+      return;
+    }
+
+    setSyncStatus('syncing');
+    const docRef = doc(db, 'houses', houseCode);
+    
+    // Register live Firestore snapshot subscription for instant bi-directional updates
+    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        
+        // Compare incoming Firestore data with the current up-to-date state from the ref
+        const currentLocal = latestStateRef.current;
+        if (!currentLocal) return;
+        
+        const isSame = 
+          JSON.stringify(data.dailyTasks) === JSON.stringify(currentLocal.dailyTasks) &&
+          JSON.stringify(data.nTimesTasks) === JSON.stringify(currentLocal.nTimesTasks) &&
+          JSON.stringify(data.weeklyTasks) === JSON.stringify(currentLocal.weeklyTasks) &&
+          JSON.stringify(data.monthlyTasks) === JSON.stringify(currentLocal.monthlyTasks) &&
+          data.memo === currentLocal.memo &&
+          data.spouseAName === currentLocal.spouseAName &&
+          data.spouseBName === currentLocal.spouseBName &&
+          JSON.stringify(data.relationshipQuests) === JSON.stringify(currentLocal.relationshipQuests) &&
+          data.cumulativeHomeXp === currentLocal.cumulativeHomeXp &&
+          data.spouseAOverallXp === currentLocal.spouseAOverallXp &&
+          data.spouseBOverallXp === currentLocal.spouseBOverallXp &&
+          data.weekStart === currentLocal.weekStart &&
+          data.weekEnd === currentLocal.weekEnd;
+
+        if (!isSame) {
+          const newState = {
+            weekStart: data.weekStart || currentLocal.weekStart,
+            weekEnd: data.weekEnd || currentLocal.weekEnd,
+            dailyTasks: data.dailyTasks || currentLocal.dailyTasks,
+            nTimesTasks: data.nTimesTasks || currentLocal.nTimesTasks,
+            weeklyTasks: data.weeklyTasks || currentLocal.weeklyTasks,
+            monthlyTasks: data.monthlyTasks || currentLocal.monthlyTasks,
+            memo: data.memo !== undefined ? data.memo : currentLocal.memo,
+            spouseAName: data.spouseAName || currentLocal.spouseAName,
+            spouseBName: data.spouseBName || currentLocal.spouseBName,
+            relationshipQuests: data.relationshipQuests || currentLocal.relationshipQuests,
+            cumulativeHomeXp: typeof data.cumulativeHomeXp === 'number' ? data.cumulativeHomeXp : currentLocal.cumulativeHomeXp,
+            spouseAOverallXp: typeof data.spouseAOverallXp === 'number' ? data.spouseAOverallXp : currentLocal.spouseAOverallXp,
+            spouseBOverallXp: typeof data.spouseBOverallXp === 'number' ? data.spouseBOverallXp : currentLocal.spouseBOverallXp,
+          };
+          
+          lastSyncedStateRef.current = newState;
+          
+          if (data.weekStart) setWeekStart(data.weekStart);
+          if (data.weekEnd) setWeekEnd(data.weekEnd);
+          if (data.dailyTasks) setDailyTasks(data.dailyTasks);
+          if (data.nTimesTasks) setNTimesTasks(data.nTimesTasks);
+          if (data.weeklyTasks) setWeeklyTasks(data.weeklyTasks);
+          if (data.monthlyTasks) setMonthlyTasks(data.monthlyTasks);
+          if (data.memo !== undefined) setMemo(data.memo);
+          if (data.spouseAName) setSpouseAName(data.spouseAName);
+          if (data.spouseBName) setSpouseBName(data.spouseBName);
+          if (data.relationshipQuests) setRelationshipQuests(data.relationshipQuests);
+          if (typeof data.cumulativeHomeXp === 'number') setCumulativeHomeXp(data.cumulativeHomeXp);
+          if (typeof data.spouseAOverallXp === 'number') setSpouseAOverallXp(data.spouseAOverallXp);
+          if (typeof data.spouseBOverallXp === 'number') setSpouseBOverallXp(data.spouseBOverallXp);
+        } else {
+          lastSyncedStateRef.current = currentLocal;
+        }
+        
+        setSyncStatus('connected');
+        setSyncErrorMessage(null);
+      } else {
+        setSyncStatus('error');
+        setSyncErrorMessage('연동된 방이 서버에서 존재하지 않습니다.');
+      }
+    }, (err) => {
+      console.error("Firestore sync subscription error:", err);
+      setSyncStatus('error');
+      setSyncErrorMessage('서버 연동 도중 통신 장애가 발생했습니다.');
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [houseCode]);
+
+  // Auto save to localStorage only when states are properly hydrated, and sync to Firebase Firestore if connected
   useEffect(() => {
     if (weekStart && weekEnd && dailyTasks.length > 0) {
       const stateObject = {
@@ -210,6 +344,39 @@ export default function App() {
         spouseBOverallXp,
       };
       localStorage.setItem('house_cleaning_state_v2', JSON.stringify(stateObject));
+
+      // Realtime Cloud Synchronization
+      if (houseCode) {
+        // Compare with what was last synced (either read from Firestore or written to Firestore)
+        const lastSynced = lastSyncedStateRef.current;
+        
+        const isSameAsSynced = lastSynced &&
+          JSON.stringify(stateObject.dailyTasks) === JSON.stringify(lastSynced.dailyTasks) &&
+          JSON.stringify(stateObject.nTimesTasks) === JSON.stringify(lastSynced.nTimesTasks) &&
+          JSON.stringify(stateObject.weeklyTasks) === JSON.stringify(lastSynced.weeklyTasks) &&
+          JSON.stringify(stateObject.monthlyTasks) === JSON.stringify(lastSynced.monthlyTasks) &&
+          stateObject.memo === lastSynced.memo &&
+          stateObject.spouseAName === lastSynced.spouseAName &&
+          stateObject.spouseBName === lastSynced.spouseBName &&
+          JSON.stringify(stateObject.relationshipQuests) === JSON.stringify(lastSynced.relationshipQuests) &&
+          stateObject.cumulativeHomeXp === lastSynced.cumulativeHomeXp &&
+          stateObject.spouseAOverallXp === lastSynced.spouseAOverallXp &&
+          stateObject.spouseBOverallXp === lastSynced.spouseBOverallXp &&
+          stateObject.weekStart === lastSynced.weekStart &&
+          stateObject.weekEnd === lastSynced.weekEnd;
+
+        if (isSameAsSynced) {
+          // Skip saving since this state is already synced with Firestore
+          return;
+        }
+
+        // Debounce writes to prevent overloading database when typing memo
+        const timer = setTimeout(() => {
+          lastSyncedStateRef.current = stateObject;
+          saveHouseState(houseCode, stateObject);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
     }
   }, [
     weekStart, 
@@ -224,7 +391,8 @@ export default function App() {
     relationshipQuests,
     cumulativeHomeXp,
     spouseAOverallXp,
-    spouseBOverallXp
+    spouseBOverallXp,
+    houseCode
   ]);
 
   // Handle Date range manual update
@@ -240,6 +408,83 @@ export default function App() {
     const range = getWeekDates(baseDate);
     setWeekStart(range.start);
     setWeekEnd(range.end);
+  };
+
+  // Section 0. Realtime Cloud Synchronization Handlers
+  const handleCreateSyncSession = async () => {
+    try {
+      setSyncStatus('syncing');
+      setSyncErrorMessage(null);
+      const newCode = generateSyncCode();
+      const stateObject = {
+        weekStart,
+        weekEnd,
+        dailyTasks,
+        nTimesTasks,
+        weeklyTasks,
+        monthlyTasks,
+        memo,
+        spouseAName,
+        spouseBName,
+        relationshipQuests,
+        cumulativeHomeXp,
+        spouseAOverallXp,
+        spouseBOverallXp,
+      };
+      await saveHouseState(newCode, stateObject);
+      localStorage.setItem('house_cleaning_sync_code', newCode);
+      setHouseCode(newCode);
+      setSyncStatus('connected');
+    } catch (e) {
+      console.error("Create sync session error:", e);
+      setSyncStatus('error');
+      setSyncErrorMessage('연동 세션 생성 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleJoinSyncSession = async (codeToJoin: string) => {
+    const trimmed = codeToJoin.trim();
+    if (!/^\d{6}$/.test(trimmed)) {
+      setSyncErrorMessage('6자리 숫자 코드를 정확히 입력해 주세요.');
+      return;
+    }
+
+    try {
+      setSyncStatus('syncing');
+      setSyncErrorMessage(null);
+      const exists = await checkHouseExists(trimmed);
+      if (exists) {
+        localStorage.setItem('house_cleaning_sync_code', trimmed);
+        setHouseCode(trimmed);
+      } else {
+        setSyncStatus('error');
+        setSyncErrorMessage('존재하지 않거나 만료된 연동 코드입니다. 다시 확인해 주세요.');
+      }
+    } catch (e) {
+      console.error("Join sync session error:", e);
+      setSyncStatus('error');
+      setSyncErrorMessage('연동 방 연결 중 서버 오류가 발생했습니다.');
+    }
+  };
+
+  const handleDisconnectSyncSession = () => {
+    localStorage.removeItem('house_cleaning_sync_code');
+    setHouseCode('');
+    setSyncStatus('idle');
+    setSyncErrorMessage(null);
+    setSyncCodeInput('');
+  };
+
+  const [copiedSyncCode, setCopiedSyncCode] = useState(false);
+  const handleCopySyncCode = () => {
+    if (!houseCode) return;
+    const inviteLink = `${window.location.origin}${window.location.pathname}?house=${houseCode}`;
+    navigator.clipboard.writeText(inviteLink).then(() => {
+      setCopiedSyncCode(true);
+      setTimeout(() => setCopiedSyncCode(false), 2000);
+    }).catch(err => {
+      console.error("Clipboard copy failed:", err);
+    });
   };
 
   // Section ➊ Daily Routine handlers - Cycles through [null, spouseAName, spouseBName]
@@ -586,7 +831,14 @@ export default function App() {
       }
     });
 
-    const thisWeekChoresXpTotal = spouseAChoreXp + spouseBChoreXp;
+    // Balanced team play check
+    const hasCooperated = spouseAChoreXp > 0 && spouseBChoreXp > 0;
+    const xpDifference = Math.abs(spouseAChoreXp - spouseBChoreXp);
+    const maxChoreXP = Math.max(spouseAChoreXp, spouseBChoreXp, 1);
+    const isHealthyBalance = hasCooperated && (xpDifference / maxChoreXP) <= 0.2;
+    const synergyBonusXp = isHealthyBalance ? 50 : 0;
+
+    const thisWeekChoresXpTotal = spouseAChoreXp + spouseBChoreXp + synergyBonusXp;
 
     return {
       dailyCompleted,
@@ -606,6 +858,8 @@ export default function App() {
       spouseAChoreXp,
       spouseBChoreXp,
       sharedQuestXp,
+      isHealthyBalance,
+      synergyBonusXp,
       thisWeekChoresXpTotal
     };
   };
@@ -744,7 +998,7 @@ export default function App() {
   const activeYear = weekStart ? weekStart.substring(0, 4) : '2026';
 
   return (
-    <div className="min-h-screen bg-slate-100 py-6 px-4 font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-100 py-3 sm:py-6 px-2 sm:px-4 font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
       {/* Precise print CSS directly formatted for A4 Portrait paper sizes */}
       <style>{`
         @media print {
@@ -898,7 +1152,7 @@ export default function App() {
       `}</style>
 
       {/* Control center panel for real time tracking - Hidden automatically on paper printing */}
-      <div className="max-w-4xl mx-auto mb-5 no-print bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+      <div className="max-w-4xl mx-auto mb-4 sm:mb-5 no-print bg-white rounded-xl p-3 sm:p-5 border border-slate-200 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -906,7 +1160,7 @@ export default function App() {
               <span className="text-[10px] text-slate-400 font-mono tracking-tight">Iframe 및 모바일 완벽 대응 패치</span>
             </div>
             <h1 className="text-xl font-bold text-slate-900 mt-1 flex items-center gap-1.5">
-              <span>🧹</span> 주간 집안 청소 체크리스트 메이커
+              <span>🧹</span> 집안일도 일이다! 메이커
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
               냉장고 자석판에 걸어놓고 체크하기 딱 예쁜 주간 전용 디자인 포맷입니다. 온라인으로 클릭 관리하고 매주 재활용하거나 완벽한 A4 비율로 간편하게 인쇄해 보세요.
@@ -1016,6 +1270,94 @@ export default function App() {
           <span className="text-[10px] text-slate-400 font-semibold">
             * 이름을 입력하면 프로필, 체크 선택자, 레벨 및 배분 스탯이 실시간으로 동기화됩니다.
           </span>
+        </div>
+
+        {/* Real-time Spouse Cloud Sync Panel */}
+        <div className="mt-3 p-3 bg-indigo-50/30 rounded-lg border border-indigo-150/70 text-xs no-print">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <span className="font-extrabold text-indigo-700 flex items-center gap-1">
+                <span>🌍</span> 실시간 부부 데이터 연동 (Cloud Sync):
+                {houseCode ? (
+                  <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 font-black rounded-sm text-[9px] border border-emerald-100 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+                    실시간 연결됨
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 font-bold rounded-sm text-[9px]">
+                    로컬 기기 전용 (개별 작동)
+                  </span>
+                )}
+              </span>
+              <p className="text-[11px] text-slate-550 font-semibold leading-relaxed">
+                {houseCode 
+                  ? '배우자와 화면이 동기화되었습니다! 어느 한쪽이 체크하면 양쪽 폰에 실시간으로 즉시 반영됩니다.'
+                  : '주소(초대 링크)를 복사해서 공유하거나, 연동 코드를 입력해 상대방의 기기와 데이터를 완벽하게 실시간 공유하세요.'
+                }
+              </p>
+            </div>
+
+            {/* Sync Controls */}
+            <div className="shrink-0">
+              {houseCode ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="p-1 px-2 border border-indigo-200/65 bg-indigo-50/55 text-indigo-800 font-mono font-extrabold text-xs rounded-md">
+                    코드: <span className="tracking-wide text-indigo-700">{houseCode}</span>
+                  </div>
+                  
+                  <button
+                    onClick={handleCopySyncCode}
+                    className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold hover:scale-[1.02] transform transition-all cursor-pointer flex items-center gap-1 shadow-xs"
+                  >
+                    <Copy className="w-3 h-3" />
+                    {copiedSyncCode ? '초대장 주소 복사함!' : '초대 링크 복사'}
+                  </button>
+
+                  <button
+                    onClick={handleDisconnectSyncSession}
+                    className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded font-bold cursor-pointer"
+                  >
+                    연동 해제
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={handleCreateSyncSession}
+                    disabled={syncStatus === 'syncing'}
+                    className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-extrabold transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {syncStatus === 'syncing' ? '연동 중...' : '🔗 새 연동코드 생성'}
+                  </button>
+                  
+                  <div className="flex items-center gap-1 border border-slate-200 bg-white p-0.5 rounded-lg shadow-xs">
+                    <input
+                      type="text"
+                      maxLength={6}
+                      placeholder="6자리 연동코드"
+                      value={syncCodeInput}
+                      onChange={(e) => setSyncCodeInput(e.target.value.replace(/\D/g, ''))}
+                      className="px-1.5 py-1 bg-transparent w-24 text-center font-bold font-mono focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleJoinSyncSession(syncCodeInput)}
+                      disabled={syncStatus === 'syncing' || syncCodeInput.length !== 6}
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-md disabled:opacity-40 select-none cursor-pointer"
+                    >
+                      코드 연결
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sync status/errors info line */}
+          {syncErrorMessage && (
+            <div className="mt-1.5 text-[10px] text-rose-600 bg-rose-50 border border-rose-100 rounded p-1 px-1.5 font-bold animate-pulse">
+              ⚠️ {syncErrorMessage}
+            </div>
+          )}
         </div>
 
         {/* Print Instruction guides */}
@@ -1166,7 +1508,7 @@ export default function App() {
 
       {/* Main A4 styled printable sheet container */}
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-5 md:p-8 print-container relative overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-3 sm:p-5 md:p-8 print-container relative overflow-hidden">
           
           {/* Style Line Top Accent - no-print */}
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-indigo-600 no-print" />
@@ -1175,7 +1517,7 @@ export default function App() {
           <div className="text-center pb-5 mb-5 border-b-2 border-slate-300">
             <div className="flex items-center justify-center gap-2">
               <span className="text-2xl">🧹</span>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight">주간 집안 청소 체크리스트</h2>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight">집안일도 일이다!</h2>
             </div>
             
             <div className="mt-2.5 inline-block bg-slate-900 text-white text-xs font-bold px-4 py-1.5 rounded-full font-mono tracking-wider">
@@ -1266,7 +1608,7 @@ export default function App() {
           {/* Core watermark foot decoration */}
           <div className="mt-6 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-2">
             <span className="font-semibold">
-              🧼 보송하고 산뜻한 기분, 우리 가족의 시작입니다. • <strong>주간 집안 청소 체크리스트</strong>
+              🧼 보송하고 산뜻한 기분, 우리 가족의 시작입니다. • <strong>집안일도 일이다!</strong>
             </span>
             <div className="flex items-center gap-1.5 font-mono text-slate-500">
               <span>기록 보존형 인쇄 시트</span>
@@ -1435,6 +1777,12 @@ export default function App() {
                   <div className="flex justify-between text-rose-700">
                     <span className="flex items-center gap-1 font-bold">💖 함께한 미션 보너스 XP:</span>
                     <span className="font-bold">+{settlementData.sharedQuestXp} XP</span>
+                  </div>
+                )}
+                {settlementData.synergyBonusXp > 0 && (
+                  <div className="flex justify-between text-amber-700 font-bold">
+                    <span className="flex items-center gap-1">💝 부부 배려 시너지 보너스 XP:</span>
+                    <span className="font-bold">+{settlementData.synergyBonusXp} XP</span>
                   </div>
                 )}
                 <div className="flex justify-between text-emerald-600 font-bold border-t border-dashed border-slate-300 pt-1.5">
