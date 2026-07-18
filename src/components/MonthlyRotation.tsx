@@ -92,19 +92,19 @@ export const MonthlyRotation: React.FC<MonthlyRotationProps> = ({
                       title="완료자 교대 추가"
                     >
                       {task.completedBy === spouseAName ? (
-                        <div className="w-6 h-6 flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] font-extrabold shadow-xs ring-2 ring-pink-100 font-sans">
+                        <div className="w-6 h-6 flex items-center justify-center rounded-full bg-pink-50 border border-pink-200 text-pink-700 text-[10px] font-black shadow-3xs ring-2 ring-pink-100/50 font-sans">
                           🤵{initialA}
                         </div>
                       ) : task.completedBy === spouseBName ? (
-                        <div className="w-6 h-6 flex items-center justify-center rounded-full bg-indigo-600 text-white text-[10px] font-extrabold shadow-xs ring-2 ring-indigo-100 font-sans">
+                        <div className="w-6 h-6 flex items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-black shadow-3xs ring-2 ring-indigo-100/50 font-sans">
                           👰{initialB}
                         </div>
                       ) : task.completed ? (
-                        <div className="w-5 h-5 flex items-center justify-center rounded bg-emerald-600 border border-emerald-600 text-white">
+                        <div className="w-5 h-5 flex items-center justify-center rounded bg-indigo-50 border border-indigo-200 text-indigo-700">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
                       ) : (
-                        <div className="w-5 h-5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-emerald-500 text-slate-350 text-[10px] font-bold">
+                        <div className="w-5 h-5 flex items-center justify-center rounded-full border border-dashed border-slate-250 bg-white hover:border-indigo-300 hover:bg-indigo-50/20 text-slate-300 hover:text-indigo-500 transition-all text-[10px] font-bold">
                           +
                         </div>
                       )}

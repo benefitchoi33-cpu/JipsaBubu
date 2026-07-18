@@ -68,19 +68,19 @@ export const RelationshipQuestList: React.FC<RelationshipQuestListProps> = ({
                     title="관계 퀘스트 완료 교대"
                   >
                     {completedBy === spouseAName ? (
-                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-pink-500 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-pink-100" title={`${spouseAName} 완료`}>
+                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-pink-50 border border-pink-200 text-pink-700 text-[10px] font-black shadow-3xs ring-2 ring-pink-100/50" title={`${spouseAName} 완료`}>
                         🤵{initialA}
                       </div>
                     ) : completedBy === spouseBName ? (
-                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-indigo-600 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-indigo-100" title={`${spouseBName} 완료`}>
+                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-black shadow-3xs ring-2 ring-indigo-100/50" title={`${spouseBName} 완료`}>
                         👰{initialB}
                       </div>
                     ) : completedBy === 'together' ? (
-                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-extrabold shadow-sm ring-2 ring-rose-100" title="둘이 함께 완료">
+                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-black shadow-3xs ring-2 ring-rose-100/50" title="둘이 함께 완료">
                         💖합
                       </div>
                     ) : (
-                      <div className="w-5 h-5 flex items-center justify-center rounded-full border border-slate-300 bg-white text-slate-300 hover:border-rose-400 hover:text-rose-400 font-bold text-xs">
+                      <div className="w-5 h-5 flex items-center justify-center rounded-full border border-dashed border-slate-250 bg-white hover:border-rose-300 hover:bg-rose-50/20 text-slate-300 hover:text-rose-500 transition-all text-xs font-bold">
                         +
                       </div>
                     )}

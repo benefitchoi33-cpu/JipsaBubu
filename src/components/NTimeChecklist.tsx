@@ -93,19 +93,19 @@ export const NTimeChecklist: React.FC<NTimeChecklistProps> = ({
                         key={i}
                         type="button"
                         onClick={() => onToggleCheck(task.id, i)}
-                        className="w-10 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer shadow-3xs select-none active:scale-95 text-[11px] font-black shrink-0"
+                        className="w-10 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 text-[11px] font-black shrink-0"
                         id={`check-ntimes-mob-${task.id}-${i}`}
                       >
                         {checkedBy === spouseAName ? (
-                          <div className="w-full h-full bg-pink-500 text-white flex items-center justify-center rounded-lg">
+                          <div className="w-full h-full bg-pink-50 border border-pink-200/80 text-pink-700 flex items-center justify-center rounded-lg shadow-3xs animate-scale-up">
                             🤵{initialA}
                           </div>
                         ) : checkedBy === spouseBName ? (
-                          <div className="w-full h-full bg-indigo-600 text-white flex items-center justify-center rounded-lg">
+                          <div className="w-full h-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 flex items-center justify-center rounded-lg shadow-3xs animate-scale-up">
                             👰{initialB}
                           </div>
                         ) : (
-                          <div className="w-full h-full bg-slate-50 text-slate-400 border border-slate-200 hover:border-indigo-400 flex items-center justify-center rounded-lg font-bold">
+                          <div className="w-full h-full bg-slate-50 text-slate-400 border border-slate-200 hover:border-indigo-250 hover:bg-indigo-50/10 flex items-center justify-center rounded-lg font-bold">
                             +{i + 1}
                           </div>
                         )}
@@ -172,20 +172,20 @@ export const NTimeChecklist: React.FC<NTimeChecklistProps> = ({
                           >
                             {checkedBy === spouseAName ? (
                               <div
-                                className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-500 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-pink-100 hover:scale-105"
+                                className="w-8 h-8 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-50 border border-pink-200 text-pink-700 text-xs sm:text-[10px] font-black shadow-3xs ring-2 ring-pink-100/50 hover:scale-105"
                                 title={`${spouseAName} 완료 (+15 XP)`}
                               >
                                 🤵{initialA}
                               </div>
                             ) : checkedBy === spouseBName ? (
                               <div
-                                className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-600 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-indigo-100 hover:scale-105"
+                                className="w-8 h-8 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs sm:text-[10px] font-black shadow-3xs ring-2 ring-indigo-100/50 hover:scale-105"
                                 title={`${spouseBName} 완료 (+15 XP)`}
                               >
                                 👰{initialB}
                               </div>
                             ) : (
-                              <div className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 text-slate-350 hover:text-pink-400 text-sm sm:text-xs font-bold">
+                              <div className="w-7 h-7 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded-full border border-dashed border-slate-250 bg-white hover:border-indigo-300 hover:bg-indigo-50/20 text-slate-300 hover:text-indigo-500 transition-all text-xs font-bold">
                                 +
                               </div>
                             )}

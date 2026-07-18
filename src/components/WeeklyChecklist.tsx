@@ -80,19 +80,19 @@ export const WeeklyChecklist: React.FC<WeeklyChecklistProps> = ({
                 <button
                   type="button"
                   onClick={() => onToggleCheck(task.id)}
-                  className="w-22 h-9 rounded-xl font-black text-xs flex items-center justify-center transition-all shadow-3xs cursor-pointer select-none active:scale-95"
+                  className="w-24 h-8.5 rounded-xl font-extrabold text-xs flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 duration-150"
                 >
                   {task.completedBy === spouseAName ? (
-                    <div className="w-full h-full bg-pink-500 text-white flex items-center justify-center gap-1 rounded-xl">
+                    <div className="w-full h-full bg-pink-50 border border-pink-200/80 text-pink-700 flex items-center justify-center gap-1 rounded-xl shadow-3xs animate-scale-up">
                       <span>🤵</span> {spouseAName}
                     </div>
                   ) : task.completedBy === spouseBName ? (
-                    <div className="w-full h-full bg-indigo-600 text-white flex items-center justify-center gap-1 rounded-xl">
+                    <div className="w-full h-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 flex items-center justify-center gap-1 rounded-xl shadow-3xs animate-scale-up">
                       <span>👰</span> {spouseBName}
                     </div>
                   ) : (
-                    <div className="w-full h-full bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/20 border border-slate-200 flex items-center justify-center gap-1 rounded-xl font-bold">
-                      <span>➕</span> 완료
+                    <div className="w-full h-full bg-slate-50/60 hover:bg-indigo-50/30 text-slate-400 hover:text-indigo-600 border border-slate-200/70 hover:border-indigo-250 flex items-center justify-center gap-1 rounded-xl font-bold transition-all">
+                      <span className="text-[10px] opacity-60">✓</span> 미완료
                     </div>
                   )}
                 </button>
@@ -152,24 +152,24 @@ export const WeeklyChecklist: React.FC<WeeklyChecklistProps> = ({
                     <div className="flex items-center justify-center h-full w-full no-print">
                       {task.completedBy === spouseAName ? (
                         <div
-                          className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-500 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-pink-100 hover:scale-105"
+                          className="w-8 h-8 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-50 border border-pink-200 text-pink-700 text-xs sm:text-[10px] font-black shadow-3xs ring-2 ring-pink-100/50 hover:scale-105"
                           title={`${spouseAName} 완료 (+30 XP)`}
                         >
                           🤵{initialA}
                         </div>
                       ) : task.completedBy === spouseBName ? (
                         <div
-                          className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-600 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-indigo-100 hover:scale-105"
+                          className="w-8 h-8 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs sm:text-[10px] font-black shadow-3xs ring-2 ring-indigo-100/50 hover:scale-105"
                           title={`${spouseBName} 완료 (+30 XP)`}
                         >
                           👰{initialB}
                         </div>
                       ) : task.completed ? (
-                        <div className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded bg-indigo-600 text-white shadow-sm">
-                          <Check className="w-5 h-5 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                        <div className="w-7 h-7 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-3xs">
+                          <Check className="w-4 h-4 sm:w-3 sm:h-3 stroke-[3.5]" />
                         </div>
                       ) : (
-                        <div className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 text-slate-350 hover:text-pink-400 text-sm sm:text-xs font-bold">
+                        <div className="w-7 h-7 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded-full border border-dashed border-slate-250 bg-white hover:border-indigo-300 hover:bg-indigo-50/20 text-slate-300 hover:text-indigo-500 transition-all text-xs font-bold">
                           +
                         </div>
                       )}

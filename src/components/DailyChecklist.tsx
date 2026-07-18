@@ -121,19 +121,19 @@ export const DailyChecklist: React.FC<DailyChecklistProps> = ({
                   <button
                     type="button"
                     onClick={() => onToggleCheck(task.id, selectedDay)}
-                    className="w-22 h-9 rounded-xl font-black text-xs flex items-center justify-center transition-all shadow-3xs cursor-pointer select-none active:scale-95"
+                    className="w-24 h-8.5 rounded-xl font-extrabold text-xs flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 duration-150"
                   >
                     {checkedBy === spouseAName ? (
-                      <div className="w-full h-full bg-pink-500 text-white flex items-center justify-center gap-1 rounded-xl">
-                        <span>🤵</span> {spouseAName}
+                      <div className="w-full h-full bg-pink-50 border border-pink-200/80 text-pink-700 flex items-center justify-center gap-1 rounded-xl shadow-3xs animate-scale-up">
+                        <span className="text-[10px]">🤵</span> {spouseAName}
                       </div>
                     ) : checkedBy === spouseBName ? (
-                      <div className="w-full h-full bg-indigo-600 text-white flex items-center justify-center gap-1 rounded-xl">
-                        <span>👰</span> {spouseBName}
+                      <div className="w-full h-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 flex items-center justify-center gap-1 rounded-xl shadow-3xs animate-scale-up">
+                        <span className="text-[10px]">👰</span> {spouseBName}
                       </div>
                     ) : (
-                      <div className="w-full h-full bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/20 border border-slate-200 flex items-center justify-center gap-1 rounded-xl font-bold">
-                        <span>➕</span> 체크
+                      <div className="w-full h-full bg-slate-50/60 hover:bg-indigo-50/30 text-slate-400 hover:text-indigo-600 border border-slate-200/70 hover:border-indigo-250 flex items-center justify-center gap-1 rounded-xl font-bold transition-all">
+                        <span className="text-[10px] opacity-60">✓</span> 미완료
                       </div>
                     )}
                   </button>
@@ -198,27 +198,27 @@ export const DailyChecklist: React.FC<DailyChecklistProps> = ({
                       <div className="flex items-center justify-center h-full w-full no-print">
                         {checkedBy === spouseAName ? (
                           <div
-                            className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-500 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-pink-100 hover:scale-105 active:scale-95 transition-all"
+                            className="w-8 h-8 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-pink-50 border border-pink-200 text-pink-700 text-xs sm:text-[10px] font-black shadow-3xs ring-2 ring-pink-100/50 hover:scale-105 active:scale-95 transition-all"
                             title={`${spouseAName} 완료 (+10 XP)`}
                           >
                             🤵{initialA}
                           </div>
                         ) : checkedBy === spouseBName ? (
                           <div
-                            className="w-10 h-10 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-600 text-white text-xs sm:text-[10px] font-extrabold shadow-md ring-2 ring-indigo-100 hover:scale-105 active:scale-95 transition-all"
+                            className="w-8 h-8 sm:w-6.5 sm:h-6.5 flex items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs sm:text-[10px] font-black shadow-3xs ring-2 ring-indigo-100/50 hover:scale-105 active:scale-95 transition-all"
                             title={`${spouseBName} 완료 (+10 XP)`}
                           >
                             👰{initialB}
                           </div>
                         ) : checkedBy === true ? (
                           <div
-                            className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded bg-indigo-650 text-white shadow-xs"
+                            className="w-7 h-7 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded bg-indigo-50 border border-indigo-200 text-indigo-700 shadow-3xs"
                           >
-                            <Check className="w-5 h-5 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                            <Check className="w-4 h-4 sm:w-3 sm:h-3 stroke-[3.5]" />
                           </div>
                         ) : (
                           <div
-                            className="w-8 h-8 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded border border-slate-300 bg-white hover:border-pink-300 hover:bg-slate-50 transition-colors text-slate-300 hover:text-pink-400 text-sm sm:text-xs font-bold"
+                            className="w-7 h-7 sm:w-5.5 sm:h-5.5 flex items-center justify-center rounded-full border border-dashed border-slate-250 bg-white hover:border-indigo-300 hover:bg-indigo-50/20 text-slate-300 hover:text-indigo-500 transition-all text-xs font-bold"
                           >
                             <span>+</span>
                           </div>

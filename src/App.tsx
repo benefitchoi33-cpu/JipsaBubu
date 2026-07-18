@@ -259,6 +259,12 @@ export default function App() {
 
   // 2. Control/View States
   const [activeTab, setActiveTab] = useState<'all' | 'daily' | 'ntimes' | 'weekly' | 'monthly' | 'stats'>('daily');
+  const [myRole, setMyRole] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('house_cleaning_my_role') || 'A';
+    }
+    return 'A';
+  });
   const [printModel, setPrintModel] = useState<'blank' | 'checked'>('blank');
   const [copiedState, setCopiedState] = useState<'none' | 'share' | 'direct'>('none');
   const [showGitGuide, setShowGitGuide] = useState(false);
@@ -556,20 +562,14 @@ export default function App() {
     });
   };
 
-  // Section ➊ Daily Routine handlers - Cycles through [null, spouseAName, spouseBName]
+  // Section ➊ Daily Routine handlers - One-click toggle based on active character
   const handleToggleDailyCheck = (taskId: string, day: string) => {
+    const activeName = myRole === 'A' ? spouseAName : spouseBName;
     setDailyTasks((prev) =>
       prev.map((task) => {
         if (task.id === taskId) {
           const current = task.checks[day];
-          let nextValue: string | null = null;
-          if (!current || current === true) {
-            nextValue = spouseAName;
-          } else if (current === spouseAName) {
-            nextValue = spouseBName;
-          } else {
-            nextValue = null;
-          }
+          const nextValue = current === activeName ? null : activeName;
           return {
             ...task,
             checks: {
@@ -597,8 +597,9 @@ export default function App() {
     setDailyTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  // Section ➋ N-Times Task handlers - cycles CompletedBy through [null, spouseAName, spouseBName]
+  // Section ➋ N-Times Task handlers - One-click toggle based on active character
   const handleToggleNTimesCheck = (taskId: string, checkboxIndex: number) => {
+    const activeName = myRole === 'A' ? spouseAName : spouseBName;
     setNTimesTasks((prev) =>
       prev.map((task) => {
         if (task.id === taskId) {
@@ -608,14 +609,7 @@ export default function App() {
             completedBy.push(null);
           }
           const current = completedBy[checkboxIndex];
-          let nextValue: string | null = null;
-          if (!current) {
-            nextValue = spouseAName;
-          } else if (current === spouseAName) {
-            nextValue = spouseBName;
-          } else {
-            nextValue = null;
-          }
+          const nextValue = current === activeName ? null : activeName;
           completedBy[checkboxIndex] = nextValue;
           const completedCount = completedBy.filter(Boolean).length;
           return {
@@ -646,8 +640,9 @@ export default function App() {
     setNTimesTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  // Section ➌ Weekly Task handlers - Cycles through [uncompleted, spouseA, spouseB]
+  // Section ➌ Weekly Task handlers - One-click toggle based on active character
   const handleToggleWeeklyCheck = (taskId: string) => {
+    const activeName = myRole === 'A' ? spouseAName : spouseBName;
     setWeeklyTasks((prev) =>
       prev.map((task) => {
         if (task.id === taskId) {
@@ -657,15 +652,12 @@ export default function App() {
           let nextCompleted = false;
           let nextBy: string | undefined = undefined;
           
-          if (!currentCompleted) {
-            nextCompleted = true;
-            nextBy = spouseAName;
-          } else if (currentBy === spouseAName) {
-            nextCompleted = true;
-            nextBy = spouseBName;
-          } else {
+          if (currentCompleted && currentBy === activeName) {
             nextCompleted = false;
             nextBy = undefined;
+          } else {
+            nextCompleted = true;
+            nextBy = activeName;
           }
           
           return {
@@ -694,7 +686,7 @@ export default function App() {
     setWeeklyTasks((prev) => prev.filter((t) => t.id !== taskId));
   };
 
-  // Section ➍ Monthly Routine handlers - Multiple selection supported
+  // Section ➍ Monthly Routine handlers - One-click toggle based on active character
   const handleSelectMonthlyTask = (taskId: string) => {
     setMonthlyTasks((prev) =>
       prev.map((task) => ({
@@ -705,6 +697,7 @@ export default function App() {
   };
 
   const handleToggleMonthlyComplete = (taskId: string) => {
+    const activeName = myRole === 'A' ? spouseAName : spouseBName;
     setMonthlyTasks((prev) =>
       prev.map((task) => {
         if (task.id === taskId) {
@@ -712,15 +705,12 @@ export default function App() {
           let nextCompleted = false;
           let nextBy: string | undefined = undefined;
           
-          if (!task.completed) {
-            nextCompleted = true;
-            nextBy = spouseAName;
-          } else if (currentBy === spouseAName) {
-            nextCompleted = true;
-            nextBy = spouseBName;
-          } else {
+          if (task.completed && currentBy === activeName) {
             nextCompleted = false;
             nextBy = undefined;
+          } else {
+            nextCompleted = true;
+            nextBy = activeName;
           }
           
           return {
@@ -734,8 +724,9 @@ export default function App() {
     );
   };
 
-  // Relationship Quests - Cycles completedBy through [null, spouseAName, spouseBName, 'together']
+  // Relationship Quests - Cycles: empty -> checked by clicker -> checked as 'together' -> empty
   const handleToggleQuest = (questId: string) => {
+    const activeName = myRole === 'A' ? spouseAName : spouseBName;
     setRelationshipQuests((prev) =>
       prev.map((q) => {
         if (q.id === questId) {
@@ -745,16 +736,16 @@ export default function App() {
           
           if (!q.completed) {
             nextCompleted = true;
-            nextBy = spouseAName;
-          } else if (currentBy === spouseAName) {
-            nextCompleted = true;
-            nextBy = spouseBName;
-          } else if (currentBy === spouseBName) {
+            nextBy = activeName;
+          } else if (currentBy === activeName) {
             nextCompleted = true;
             nextBy = 'together';
-          } else {
+          } else if (currentBy === 'together') {
             nextCompleted = false;
             nextBy = undefined;
+          } else {
+            nextCompleted = true;
+            nextBy = activeName;
           }
           
           return {
@@ -1298,6 +1289,46 @@ export default function App() {
             >
               <Trophy className="w-3.5 h-3.5 fill-amber-400 text-amber-100" />
               🏆 주간 살림 정산
+            </button>
+          </div>
+        </div>
+
+        {/* Active Device Character Selector Sub-bar (One-click toggle setting) */}
+        <div className="mt-4 bg-slate-50 border border-slate-200/60 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 text-xs">
+            <span className="flex items-center justify-center w-6 h-6 bg-indigo-50 text-indigo-650 rounded-full text-[11px] font-black shrink-0">📱</span>
+            <div className="space-y-0.5 text-left">
+              <p className="font-extrabold text-slate-700 leading-none flex items-center gap-1">내 기기 캐릭터 지정 <span className="text-[9px] bg-indigo-50 text-indigo-650 px-1 py-0.2 rounded font-black border border-indigo-100">자동 저장</span></p>
+              <p className="text-[10px] text-slate-400 font-medium">각자 폰에서 본인 캐릭터를 선택해 두면 체크 시 즉시 연동됩니다.</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1.5 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                setMyRole('A');
+                localStorage.setItem('house_cleaning_my_role', 'A');
+              }}
+              className={`flex-1 sm:flex-initial px-4.5 py-2 text-xs font-black rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-3xs ${
+                myRole === 'A'
+                  ? 'bg-pink-500 text-white shadow-pink-100 ring-2 ring-pink-300'
+                  : 'bg-white text-pink-600 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <span>🤵</span> {spouseAName} (나)
+            </button>
+            <button
+              onClick={() => {
+                setMyRole('B');
+                localStorage.setItem('house_cleaning_my_role', 'B');
+              }}
+              className={`flex-1 sm:flex-initial px-4.5 py-2 text-xs font-black rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-3xs ${
+                myRole === 'B'
+                  ? 'bg-indigo-600 text-white shadow-indigo-100 ring-2 ring-indigo-300'
+                  : 'bg-white text-indigo-650 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <span>👰</span> {spouseBName} (나)
             </button>
           </div>
         </div>
