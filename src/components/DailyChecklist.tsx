@@ -23,6 +23,20 @@ export const DailyChecklist: React.FC<DailyChecklistProps> = ({
   spouseBName,
 }) => {
   const [newTaskName, setNewTaskName] = React.useState('');
+  
+  const koreanDays = ['일', '월', '화', '수', '목', '금', '토'];
+  const todayKoreanDay = koreanDays[new Date().getDay()];
+  const [selectedDay, setSelectedDay] = React.useState<string>(
+    todayKoreanDay === '일' || todayKoreanDay === '토' ? todayKoreanDay : '월'
+  );
+
+  React.useEffect(() => {
+    // Default to today if it matches one of the DAYS_OF_WEEK, otherwise default to 월
+    const match = ['월', '화', '수', '목', '금', '토', '일'].find(d => d === todayKoreanDay);
+    if (match) {
+      setSelectedDay(match);
+    }
+  }, [todayKoreanDay]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,13 +63,96 @@ export const DailyChecklist: React.FC<DailyChecklistProps> = ({
         </p>
       </div>
 
-      {/* Mobile Swipe Hint Indicator */}
-      <div className="text-[10px] text-slate-500 bg-slate-50 rounded-lg p-2 flex items-center justify-between no-print sm:hidden border border-slate-200 mb-1.5 animate-pulse">
-        <span className="font-semibold">👈 좌우로 밀어서 요일별(월~일) 청소를 체크하세요</span>
-        <span className="font-bold">↔</span>
+      {/* Screen Day Pill Selectors - Mobile UI Savior */}
+      <div className="no-print mb-2.5 bg-slate-100/80 p-1 rounded-xl border border-slate-200/50 flex items-center gap-1 overflow-x-auto scrollbar-none shadow-3xs">
+        {['월', '화', '수', '목', '금', '토', '일', '전체'].map((day) => {
+          const isToday = day === todayKoreanDay;
+          const isSel = selectedDay === day;
+          return (
+            <button
+              key={day}
+              type="button"
+              onClick={() => setSelectedDay(day)}
+              className={`flex-1 min-w-[38px] py-1.5 text-[11px] font-black rounded-lg transition-all text-center cursor-pointer relative ${
+                isSel
+                  ? 'bg-slate-800 text-white shadow-xs scale-[1.03]'
+                  : 'text-slate-600 hover:bg-white hover:text-slate-900 bg-transparent'
+              }`}
+            >
+              {day}
+              {isToday && day !== '전체' && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-rose-500 rounded-full ring-1 ring-white" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+      {/* 1. Mobile Optimized Layout (Displays when selectedDay !== '전체' on screens < 640px) */}
+      {selectedDay !== '전체' && (
+        <div className="space-y-2 no-print sm:hidden mb-2">
+          {tasks.map((task) => {
+            const checkedBy = task.checks[selectedDay];
+            const initialA = spouseAName.charAt(0);
+            const initialB = spouseBName.charAt(0);
+            return (
+              <div 
+                key={task.id} 
+                className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-3xs hover:border-slate-300 transition-all"
+              >
+                <div className="flex flex-col gap-0.5 pr-2">
+                  <span className="text-xs sm:text-sm font-bold text-slate-800 break-all leading-tight">{task.name}</span>
+                  <span className="text-[10px] text-indigo-650 font-extrabold bg-indigo-50/50 self-start px-1 py-0.5 rounded mt-1">
+                    {selectedDay}요일 루틴
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {task.isCustom && (
+                    <button
+                      type="button"
+                      onClick={() => onDeleteTask(task.id)}
+                      className="text-slate-400 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  <button
+                    type="button"
+                    onClick={() => onToggleCheck(task.id, selectedDay)}
+                    className="w-22 h-9 rounded-xl font-black text-xs flex items-center justify-center transition-all shadow-3xs cursor-pointer select-none active:scale-95"
+                  >
+                    {checkedBy === spouseAName ? (
+                      <div className="w-full h-full bg-pink-500 text-white flex items-center justify-center gap-1 rounded-xl">
+                        <span>🤵</span> {spouseAName}
+                      </div>
+                    ) : checkedBy === spouseBName ? (
+                      <div className="w-full h-full bg-indigo-600 text-white flex items-center justify-center gap-1 rounded-xl">
+                        <span>👰</span> {spouseBName}
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/20 border border-slate-200 flex items-center justify-center gap-1 rounded-xl font-bold">
+                        <span>➕</span> 체크
+                      </div>
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {tasks.length === 0 && (
+            <div className="text-center py-6 text-xs text-slate-400 bg-white rounded-xl border border-slate-200">
+              등록된 루틴 항목이 없습니다. 하단에서 청소 항목을 추가해 보세요!
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 2. Full Table Layout (Printed ALWAYS, or shown on screen when selectedDay === '전체' OR screen is sm/desktop) */}
+      <div className={`overflow-x-auto border border-slate-200 rounded-lg shadow-sm ${
+        selectedDay === '전체' ? 'block' : 'hidden sm:block'
+      } print:block`}>
         <table className="w-full text-xs sm:text-sm text-left border-collapse bg-white">
           <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
             <tr>

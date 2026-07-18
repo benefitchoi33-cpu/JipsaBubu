@@ -1686,7 +1686,7 @@ export default function App() {
           </div>
 
           {/* House RPG Interior Game Board */}
-          <div className={`${activeTab === 'all' || activeTab === 'stats' ? 'block' : 'hidden md:block'} print:block`}>
+          <div className={`${activeTab === 'stats' ? 'block' : 'hidden lg:block'} print:block`}>
             <HouseInterior
               cumulativeHomeXp={cumulativeHomeXp + (getWeeklySettleSummary()?.thisWeekChoresXpTotal || 0)}
               spouseAName={spouseAName}
@@ -1695,7 +1695,7 @@ export default function App() {
           </div>
 
           {/* Comprehensive Statistics bar */}
-          <div className={`${activeTab === 'all' || activeTab === 'stats' ? 'block' : 'hidden md:block'} print:block`}>
+          <div className={`${activeTab === 'stats' ? 'block' : 'hidden lg:block'} print:block`}>
             <StatsSummary
               dailyTasks={dailyTasks}
               nTimesTasks={nTimesTasks}

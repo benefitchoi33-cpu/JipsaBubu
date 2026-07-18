@@ -58,13 +58,74 @@ export const NTimeChecklist: React.FC<NTimeChecklistProps> = ({
         </p>
       </div>
 
-      {/* Mobile Swipe Hint Indicator */}
-      <div className="text-[10px] text-slate-500 bg-slate-50 rounded-lg p-2 flex items-center justify-between no-print sm:hidden border border-slate-200 mb-1.5 animate-pulse">
-        <span className="font-semibold">👈 좌우로 밀어서 실행 횟수와 비고란을 확인하세요</span>
-        <span className="font-bold">↔</span>
+      {/* 1. Mobile Optimized Layout (Displays on screens < 640px) */}
+      <div className="space-y-2.5 no-print sm:hidden mb-3">
+        {tasks.map((task) => {
+          const initialA = spouseAName.charAt(0);
+          const initialB = spouseBName.charAt(0);
+          return (
+            <div key={task.id} className="p-3 bg-white border border-slate-200 rounded-xl space-y-2.5 shadow-3xs hover:border-slate-350 transition-all">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-800 break-all leading-snug">{task.name}</h4>
+                  <p className="text-[10px] text-slate-400 font-extrabold mt-1">
+                    목표: 주 {task.targetCount}회 ({task.note})
+                  </p>
+                </div>
+                {task.isCustom && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteTask(task.id)}
+                    className="text-slate-400 hover:text-rose-500 p-1.5 hover:bg-rose-50 rounded-lg transition-colors shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between border-t border-slate-100 pt-2 gap-2">
+                <span className="text-[10px] text-slate-400 font-extrabold">달성 기록 체크:</span>
+                <div className="flex items-center gap-1.5">
+                  {Array.from({ length: task.targetCount }).map((_, i) => {
+                    const checkedBy = task.completedBy ? task.completedBy[i] : (task.completedCount > i ? spouseAName : null);
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => onToggleCheck(task.id, i)}
+                        className="w-10 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer shadow-3xs select-none active:scale-95 text-[11px] font-black shrink-0"
+                        id={`check-ntimes-mob-${task.id}-${i}`}
+                      >
+                        {checkedBy === spouseAName ? (
+                          <div className="w-full h-full bg-pink-500 text-white flex items-center justify-center rounded-lg">
+                            🤵{initialA}
+                          </div>
+                        ) : checkedBy === spouseBName ? (
+                          <div className="w-full h-full bg-indigo-600 text-white flex items-center justify-center rounded-lg">
+                            👰{initialB}
+                          </div>
+                        ) : (
+                          <div className="w-full h-full bg-slate-50 text-slate-400 border border-slate-200 hover:border-indigo-400 flex items-center justify-center rounded-lg font-bold">
+                            +{i + 1}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {tasks.length === 0 && (
+          <div className="text-center py-6 text-xs text-slate-400 bg-white rounded-xl border border-slate-200">
+            등록된 항목이 없습니다.
+          </div>
+        )}
       </div>
 
-      <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+      {/* 2. Full Table Layout (Printed ALWAYS, or shown on screen when screen is sm/desktop) */}
+      <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm hidden sm:block print:block">
         <table className="w-full text-xs sm:text-sm text-left border-collapse bg-white">
           <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
             <tr>

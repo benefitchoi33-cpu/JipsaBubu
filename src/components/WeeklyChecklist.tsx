@@ -49,13 +49,66 @@ export const WeeklyChecklist: React.FC<WeeklyChecklistProps> = ({
         </p>
       </div>
 
-      {/* Mobile Swipe Hint Indicator */}
-      <div className="text-[10px] text-slate-500 bg-slate-50 rounded-lg p-1.5 flex items-center justify-between no-print sm:hidden border border-slate-200 mb-1.5 animate-pulse">
-        <span className="font-semibold">👈 좌우로 밀어서 완료 여부를 간편히 입력하세요</span>
-        <span className="font-bold">↔</span>
+      {/* 1. Mobile Optimized Layout (Displays on screens < 640px) */}
+      <div className="space-y-2 no-print sm:hidden mb-3">
+        {tasks.map((task) => {
+          const initialA = spouseAName.charAt(0);
+          const initialB = spouseBName.charAt(0);
+          return (
+            <div 
+              key={task.id} 
+              className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-3xs hover:border-slate-300 transition-all"
+            >
+              <div className="flex flex-col gap-1 pr-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-black">{task.category}</span>
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-slate-800 break-all leading-snug">{task.name}</span>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {task.isCustom && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteTask(task.id)}
+                    className="text-slate-400 hover:text-rose-500 p-2 hover:bg-rose-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => onToggleCheck(task.id)}
+                  className="w-22 h-9 rounded-xl font-black text-xs flex items-center justify-center transition-all shadow-3xs cursor-pointer select-none active:scale-95"
+                >
+                  {task.completedBy === spouseAName ? (
+                    <div className="w-full h-full bg-pink-500 text-white flex items-center justify-center gap-1 rounded-xl">
+                      <span>🤵</span> {spouseAName}
+                    </div>
+                  ) : task.completedBy === spouseBName ? (
+                    <div className="w-full h-full bg-indigo-600 text-white flex items-center justify-center gap-1 rounded-xl">
+                      <span>👰</span> {spouseBName}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/20 border border-slate-200 flex items-center justify-center gap-1 rounded-xl font-bold">
+                      <span>➕</span> 완료
+                    </div>
+                  )}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+        {tasks.length === 0 && (
+          <div className="text-center py-6 text-xs text-slate-400 bg-white rounded-xl border border-slate-200">
+            등록된 주간 집중 항목이 없습니다.
+          </div>
+        )}
       </div>
 
-      <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm">
+      {/* 2. Full Table Layout (Printed ALWAYS, or shown on screen when screen is sm/desktop) */}
+      <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-sm hidden sm:block print:block">
         <table className="w-full text-xs sm:text-sm text-left border-collapse bg-white">
           <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
             <tr>
