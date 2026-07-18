@@ -724,6 +724,22 @@ export default function App() {
     );
   };
 
+  const handleMonthlyAddTask = (category: string, name: string) => {
+    const newTask: MonthlyRotationItem = {
+      id: `monthly_custom_${Date.now()}`,
+      category,
+      name,
+      isSelected: true,
+      completed: false,
+      isCustom: true,
+    };
+    setMonthlyTasks((prev) => [...prev, newTask]);
+  };
+
+  const handleMonthlyDeleteTask = (taskId: string) => {
+    setMonthlyTasks((prev) => prev.filter((t) => t.id !== taskId));
+  };
+
   // Relationship Quests - Cycles: empty -> checked by clicker -> checked as 'together' -> empty
   const handleToggleQuest = (questId: string) => {
     const activeName = myRole === 'A' ? spouseAName : spouseBName;
@@ -780,10 +796,9 @@ export default function App() {
     let weeklyPossible = weeklyTasks.length;
     let weeklyCompleted = weeklyTasks.filter(t => t.completed).length;
 
-    // 4. Monthly tasks (Only selected ones count towards current week's targets!)
-    const activeSelectedMonthly = monthlyTasks.filter(t => t.isSelected);
-    let monthlyPossible = activeSelectedMonthly.length;
-    let monthlyCompleted = activeSelectedMonthly.filter(t => t.completed).length;
+    // 4. Monthly tasks
+    let monthlyPossible = monthlyTasks.length;
+    let monthlyCompleted = monthlyTasks.filter(t => t.completed).length;
 
     let totalPossible = dailyPossible + nTimesPossible + weeklyPossible + monthlyPossible;
     let totalCompleted = dailyCompleted + nTimesCompleted + weeklyCompleted + monthlyCompleted;
@@ -861,7 +876,7 @@ export default function App() {
 
     // Monthly parser
     monthlyTasks.forEach(t => {
-      if (t.completed && t.isSelected) {
+      if (t.completed) {
         if (t.completedBy === spouseAName) spouseAChoreXp += 50;
         else if (t.completedBy === spouseBName) spouseBChoreXp += 50;
         else {
@@ -1000,7 +1015,7 @@ export default function App() {
     setMonthlyTasks((prev) =>
       prev.map((task) => ({
         ...task,
-        isSelected: false,
+        isSelected: true,
         completed: false,
         completedBy: undefined,
       }))
@@ -1847,8 +1862,9 @@ export default function App() {
           <div className={`${activeTab === 'all' || activeTab === 'monthly' ? 'block' : 'hidden md:block'} print:block`}>
             <MonthlyRotation
               tasks={monthlyTasks}
-              onSelectTask={handleSelectMonthlyTask}
               onToggleComplete={handleToggleMonthlyComplete}
+              onAddTask={handleMonthlyAddTask}
+              onDeleteTask={handleMonthlyDeleteTask}
               printModel={printModel}
               spouseAName={spouseAName}
               spouseBName={spouseBName}

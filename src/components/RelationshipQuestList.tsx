@@ -60,34 +60,31 @@ export const RelationshipQuestList: React.FC<RelationshipQuestListProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="shrink-0">
                   <button
                     type="button"
                     onClick={() => onToggleQuest(quest.id)}
-                    className="w-8 h-8 flex items-center justify-center rounded-full transition-all cursor-pointer"
+                    className="w-24 h-8.5 rounded-xl font-extrabold text-xs flex items-center justify-center transition-all cursor-pointer select-none active:scale-95 duration-150"
                     title="관계 퀘스트 완료 교대"
                   >
                     {completedBy === spouseAName ? (
-                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-pink-50 border border-pink-200 text-pink-700 text-[10px] font-black shadow-3xs ring-2 ring-pink-100/50" title={`${spouseAName} 완료`}>
-                        🤵{initialA}
+                      <div className="w-full h-full bg-pink-50 border border-pink-200/80 text-pink-700 flex items-center justify-center gap-1 rounded-xl shadow-3xs animate-scale-up">
+                        <span>🤵</span> {spouseAName}
                       </div>
                     ) : completedBy === spouseBName ? (
-                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-black shadow-3xs ring-2 ring-indigo-100/50" title={`${spouseBName} 완료`}>
-                        👰{initialB}
+                      <div className="w-full h-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 flex items-center justify-center gap-1 rounded-xl shadow-3xs animate-scale-up">
+                        <span>👰</span> {spouseBName}
                       </div>
                     ) : completedBy === 'together' ? (
-                      <div className="w-6.5 h-6.5 flex items-center justify-center rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-black shadow-3xs ring-2 ring-rose-100/50" title="둘이 함께 완료">
-                        💖합
+                      <div className="w-full h-full bg-rose-50 border border-rose-200/80 text-rose-750 flex items-center justify-center gap-1 rounded-xl shadow-3xs animate-scale-up">
+                        <span>💖</span> 함께 완료
                       </div>
                     ) : (
-                      <div className="w-5 h-5 flex items-center justify-center rounded-full border border-dashed border-slate-250 bg-white hover:border-rose-300 hover:bg-rose-50/20 text-slate-300 hover:text-rose-500 transition-all text-xs font-bold">
-                        +
+                      <div className="w-full h-full bg-slate-50/60 hover:bg-indigo-50/30 text-slate-400 hover:text-indigo-600 border border-slate-200/70 hover:border-indigo-250 flex items-center justify-center gap-1 rounded-xl font-bold transition-all">
+                        <span className="text-[10px] opacity-60">✓</span> 미완료
                       </div>
                     )}
                   </button>
-                  <span className="text-[9px] font-bold text-rose-500">
-                    {completedBy === 'together' ? '함께!' : completedBy ? `${completedBy}` : '대기'}
-                  </span>
                 </div>
               </div>
             );

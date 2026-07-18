@@ -92,9 +92,9 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
     }
   });
 
-  // 4. Monthly Chores: 50 XP (only selected and completed count)
+  // 4. Monthly Chores: 50 XP
   monthlyTasks.forEach(task => {
-    if (task.completed && task.isSelected) {
+    if (task.completed) {
       if (task.completedBy === spouseAName) xpA += 50;
       else if (task.completedBy === spouseBName) xpB += 50;
       else {
@@ -204,14 +204,12 @@ export const StatsSummary: React.FC<StatsSummaryProps> = ({
     }
   });
 
-  // 4. Process monthlyTasks if selected (possible: 1)
+  // 4. Process monthlyTasks (possible: 1)
   monthlyTasks.forEach((task) => {
-    if (task.isSelected) {
-      const key = getAreaKey(task.name, task.category);
-      areaStats[key].possible += 1;
-      if (task.completed) {
-        areaStats[key].completed += 1;
-      }
+    const key = getAreaKey(task.name, task.category);
+    areaStats[key].possible += 1;
+    if (task.completed) {
+      areaStats[key].completed += 1;
     }
   });
 

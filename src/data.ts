@@ -107,35 +107,35 @@ export const INITIAL_MONTHLY_TASKS: MonthlyRotationItem[] = [
     id: 'monthly_1',
     category: '욕실 전체',
     name: '욕실 바닥 물청소, 벽면 타일 및 곰팡이 제거',
-    isSelected: false,
+    isSelected: true,
     completed: false
   },
   {
     id: 'monthly_2',
     category: '침실',
     name: '침구 전체 세탁 (이불 및 베개커버 교체)',
-    isSelected: false,
+    isSelected: true,
     completed: false
   },
   {
     id: 'monthly_3',
     category: '주방',
     name: '냉장고 유통기한 확인 및 내부 선반 닦기',
-    isSelected: false,
+    isSelected: true,
     completed: false
   },
   {
     id: 'monthly_4',
     category: '가전',
     name: '세탁조 청소 또는 공기청정기/에어컨 필터 청소',
-    isSelected: false,
+    isSelected: true,
     completed: false
   },
   {
     id: 'monthly_5',
     category: '기타',
     name: '현관 바닥 닦기 또는 집안 거울/창틀 먼지 제거',
-    isSelected: false,
+    isSelected: true,
     completed: false
   }
 ];

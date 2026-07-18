@@ -31,6 +31,7 @@ export interface MonthlyRotationItem {
   isSelected: boolean;
   completed: boolean;
   completedBy?: string; // name of the spouse who completed it
+  isCustom?: boolean;
 }
 
 export interface RelationshipQuest {
