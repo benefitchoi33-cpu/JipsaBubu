@@ -129,9 +129,19 @@ export const DailyChecklist: React.FC<DailyChecklistProps> = ({
                       </div>
 
                       {/* Pure Print-formatted output */}
-                      <span className="hidden print:inline text-xs font-bold text-slate-900 leading-none">
-                        {shouldShowChecked ? (checkedBy === spouseAName ? `☑(${initialA})` : checkedBy === spouseBName ? `☑(${initialB})` : '☑') : '□'}
-                      </span>
+                      <div className="hidden print:flex items-center justify-center">
+                        {shouldShowChecked ? (
+                          checkedBy === spouseAName ? (
+                            <span className="print-check-icon print-check-icon-a">{initialA}</span>
+                          ) : checkedBy === spouseBName ? (
+                            <span className="print-check-icon print-check-icon-b">{initialB}</span>
+                          ) : (
+                            <span className="print-check-icon bg-slate-800 text-white">✓</span>
+                          )
+                        ) : (
+                          <span className="print-check-icon print-check-icon-empty"></span>
+                        )}
+                      </div>
                     </td>
                   );
                 })}

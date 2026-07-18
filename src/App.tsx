@@ -251,11 +251,17 @@ export default function App() {
     return typeof loaded?.spouseBOverallXp === 'number' ? loaded.spouseBOverallXp : 0;
   });
 
+  const [historyLogs, setHistoryLogs] = useState<any[]>(() => {
+    const loaded = getInitialStateFromUrlOrStorage();
+    return Array.isArray(loaded?.historyLogs) ? loaded.historyLogs : [];
+  });
+
   // 2. Control/View States
-  const [activeTab, setActiveTab] = useState<'all' | 'daily' | 'ntimes' | 'weekly' | 'monthly' | 'stats'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'daily' | 'ntimes' | 'weekly' | 'monthly' | 'stats'>('daily');
   const [printModel, setPrintModel] = useState<'blank' | 'checked'>('blank');
   const [copiedState, setCopiedState] = useState<'none' | 'share' | 'direct'>('none');
   const [showGitGuide, setShowGitGuide] = useState(false);
+  const [isEditingNames, setIsEditingNames] = useState(false);
   
   // 3. Custom Friendly Modal dialogs to bypass Chrome Sandbox Frame rules
   const [isNextWeekModalOpen, setIsNextWeekModalOpen] = useState(false);
@@ -279,6 +285,7 @@ export default function App() {
     cumulativeHomeXp,
     spouseAOverallXp,
     spouseBOverallXp,
+    historyLogs,
   };
 
   // Save houseCode to localStorage whenever it changes (e.g., when loaded from URL query param)
@@ -322,6 +329,7 @@ export default function App() {
           data.cumulativeHomeXp === currentLocal.cumulativeHomeXp &&
           data.spouseAOverallXp === currentLocal.spouseAOverallXp &&
           data.spouseBOverallXp === currentLocal.spouseBOverallXp &&
+          JSON.stringify(data.historyLogs || []) === JSON.stringify(currentLocal.historyLogs || []) &&
           data.weekStart === currentLocal.weekStart &&
           data.weekEnd === currentLocal.weekEnd;
 
@@ -340,6 +348,7 @@ export default function App() {
             cumulativeHomeXp: typeof data.cumulativeHomeXp === 'number' ? data.cumulativeHomeXp : currentLocal.cumulativeHomeXp,
             spouseAOverallXp: typeof data.spouseAOverallXp === 'number' ? data.spouseAOverallXp : currentLocal.spouseAOverallXp,
             spouseBOverallXp: typeof data.spouseBOverallXp === 'number' ? data.spouseBOverallXp : currentLocal.spouseBOverallXp,
+            historyLogs: data.historyLogs || currentLocal.historyLogs || [],
           };
           
           lastSyncedStateRef.current = newState;
@@ -357,6 +366,7 @@ export default function App() {
           if (typeof data.cumulativeHomeXp === 'number') setCumulativeHomeXp(data.cumulativeHomeXp);
           if (typeof data.spouseAOverallXp === 'number') setSpouseAOverallXp(data.spouseAOverallXp);
           if (typeof data.spouseBOverallXp === 'number') setSpouseBOverallXp(data.spouseBOverallXp);
+          if (data.historyLogs) setHistoryLogs(data.historyLogs);
         } else {
           lastSyncedStateRef.current = currentLocal;
         }
@@ -395,6 +405,7 @@ export default function App() {
         cumulativeHomeXp,
         spouseAOverallXp,
         spouseBOverallXp,
+        historyLogs,
       };
       localStorage.setItem('house_cleaning_state_v2', JSON.stringify(stateObject));
 
@@ -415,6 +426,7 @@ export default function App() {
           stateObject.cumulativeHomeXp === lastSynced.cumulativeHomeXp &&
           stateObject.spouseAOverallXp === lastSynced.spouseAOverallXp &&
           stateObject.spouseBOverallXp === lastSynced.spouseBOverallXp &&
+          JSON.stringify(stateObject.historyLogs || []) === JSON.stringify(lastSynced.historyLogs || []) &&
           stateObject.weekStart === lastSynced.weekStart &&
           stateObject.weekEnd === lastSynced.weekEnd;
 
@@ -445,6 +457,7 @@ export default function App() {
     cumulativeHomeXp,
     spouseAOverallXp,
     spouseBOverallXp,
+    historyLogs,
     houseCode
   ]);
 
@@ -931,6 +944,7 @@ export default function App() {
     setCumulativeHomeXp(0);
     setSpouseAOverallXp(0);
     setSpouseBOverallXp(0);
+    setHistoryLogs([]);
     setMemo('');
     setIsResetModalOpen(false);
   };
@@ -948,6 +962,19 @@ export default function App() {
     setCumulativeHomeXp((prev) => prev + summary.thisWeekChoresXpTotal + summary.bonusXp);
     setSpouseAOverallXp((prev) => prev + summary.spouseAChoreXp);
     setSpouseBOverallXp((prev) => prev + summary.spouseBChoreXp);
+
+    // Save history log entry
+    const logEntry = {
+      weekStart,
+      weekEnd,
+      completionRate: summary.completionRate,
+      grade: summary.grade,
+      spouseAChoreXp: summary.spouseAChoreXp,
+      spouseBChoreXp: summary.spouseBChoreXp,
+      thisWeekChoresXpTotal: summary.thisWeekChoresXpTotal,
+      timestamp: new Date().toISOString(),
+    };
+    setHistoryLogs((prev) => [...prev, logEntry]);
 
     const endObject = new Date(weekEnd);
     endObject.setDate(endObject.getDate() + 1); 
@@ -1072,7 +1099,7 @@ export default function App() {
             height: 282mm !important;
             min-height: 282mm !important;
             max-height: 282mm !important;
-            padding: 8mm 11mm !important;
+            padding: 5mm 8mm !important;
             box-shadow: none !important;
             border: none !important;
             margin: 0 auto !important;
@@ -1082,6 +1109,41 @@ export default function App() {
             box-sizing: border-box !important;
             display: flex !important;
             flex-direction: column !important;
+            /* Drastic scaling down to fit compact icons and fit everything perfectly */
+            transform: scale(0.92) !important;
+            transform-origin: top center !important;
+          }
+          /* Cute rounded sticker icons on print */
+          .print-check-icon {
+            display: inline-flex !important;
+            width: 14px !important;
+            height: 14px !important;
+            border-radius: 50% !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 8px !important;
+            font-weight: 900 !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            line-height: 14px !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .print-check-icon-a {
+            background-color: #ec4899 !important; /* pink-500 */
+            color: white !important;
+            border: 1px solid #db2777 !important;
+          }
+          .print-check-icon-b {
+            background-color: #4f46e5 !important; /* indigo-600 */
+            color: white !important;
+            border: 1px solid #4338ca !important;
+          }
+          .print-check-icon-empty {
+            background-color: #f8fafc !important;
+            border: 1.5px solid #cbd5e1 !important;
+            width: 11px !important;
+            height: 11px !important;
           }
           /* Pushes footer to the absolute bottom, creating a beautiful empty gap below memo */
           .print-container > :last-child {
@@ -1291,37 +1353,60 @@ export default function App() {
         </div>
 
         {/* Newlyweds Character Names panel */}
-        <div className="mt-3 p-3 bg-pink-50/20 rounded-lg border border-pink-100 flex flex-wrap items-center gap-4 text-xs no-print">
-          <div className="flex items-center gap-2">
+        <div className="mt-3 p-3 bg-pink-50/20 rounded-lg border border-pink-100/75 flex flex-wrap items-center justify-between gap-3 text-xs no-print">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="font-extrabold text-pink-700 flex items-center gap-1 shrink-0">
               <Heart className="w-4 h-4 fill-pink-500 text-pink-500 animate-pulse" /> 
-              신혼부부 캐릭터 이름 설정:
+              부부 캐릭터 설정:
             </span>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-500 font-medium">🤵 배우자 A:</span>
-                <input
-                  type="text"
-                  value={spouseAName}
-                  onChange={(e) => setSpouseAName(e.target.value.trim() || '지민')}
-                  placeholder="예: 지민"
-                  className="px-2 py-1 border border-slate-300 rounded font-bold bg-white text-pink-600 w-16 focus:ring-1 focus:ring-pink-400 focus:outline-none"
-                />
+            
+            {!isEditingNames ? (
+              <div className="flex items-center gap-2">
+                <span className="font-black text-slate-800 bg-white border border-pink-100 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-2xs">
+                  <span className="text-pink-600">🤵 {spouseAName}</span>
+                  <span className="text-slate-300 font-normal">|</span>
+                  <span className="text-indigo-600">👰 {spouseBName}</span>
+                </span>
+                <button
+                  onClick={() => setIsEditingNames(true)}
+                  className="px-2 py-1 text-[10px] text-pink-700 hover:text-pink-800 font-extrabold hover:underline cursor-pointer flex items-center gap-0.5"
+                >
+                  ⚙️ 이름 변경
+                </button>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-500 font-medium">👰 배우자 B:</span>
-                <input
-                  type="text"
-                  value={spouseBName}
-                  onChange={(e) => setSpouseBName(e.target.value.trim() || '수현')}
-                  placeholder="예: 수현"
-                  className="px-2 py-1 border border-slate-300 rounded font-bold bg-white text-indigo-650 w-16 focus:ring-1 focus:ring-indigo-400 focus:outline-none"
-                />
+            ) : (
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">🤵 배우자 A:</span>
+                  <input
+                    type="text"
+                    value={spouseAName}
+                    onChange={(e) => setSpouseAName(e.target.value.trim() || '지민')}
+                    placeholder="예: 지민"
+                    className="px-2 py-1 border border-slate-300 rounded font-bold bg-white text-pink-600 w-16 focus:ring-1 focus:ring-pink-400 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-500 font-medium">👰 배우자 B:</span>
+                  <input
+                    type="text"
+                    value={spouseBName}
+                    onChange={(e) => setSpouseBName(e.target.value.trim() || '수현')}
+                    placeholder="예: 수현"
+                    className="px-2 py-1 border border-slate-300 rounded font-bold bg-white text-indigo-650 w-16 focus:ring-1 focus:ring-indigo-400 focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={() => setIsEditingNames(false)}
+                  className="px-2.5 py-1 bg-pink-600 hover:bg-pink-700 text-white font-extrabold rounded text-[10px] cursor-pointer"
+                >
+                  설정 완료
+                </button>
               </div>
-            </div>
+            )}
           </div>
-          <span className="text-[10px] text-slate-400 font-semibold">
-            * 이름을 입력하면 프로필, 체크 선택자, 레벨 및 배분 스탯이 실시간으로 동기화됩니다.
+          <span className="text-[10px] text-slate-400 font-medium">
+            * 한 번 설정해두면 프로필, 요일별 선택자, 성장 스탯에 실시간 연동됩니다.
           </span>
         </div>
 
@@ -1580,6 +1665,61 @@ export default function App() {
               spouseBName={spouseBName}
             />
           </div>
+
+          {/* 주간 살림 정산 기록 (History Logs) - Only show in stats tab on screen */}
+          {activeTab === 'stats' && (
+            <div className="no-print mt-4 mb-4 bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <h3 className="text-xs font-black text-slate-800 flex items-center gap-2 mb-3">
+                <span>📜</span> 누적 주간 정산 기록 ({historyLogs.length}회)
+              </h3>
+              {historyLogs.length === 0 ? (
+                <div className="text-center py-6 text-[11px] text-slate-400 font-medium">
+                  아직 완료된 주간 정산 기록이 없습니다.<br />
+                  이번 주 집안일을 수행하고 상단의 <strong>[🏆 주간 살림 정산]</strong> 버튼을 누르면 정산 역사가 기록됩니다!
+                </div>
+              ) : (
+                <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                  {historyLogs.slice().reverse().map((log, index) => {
+                    const revIndex = historyLogs.length - index;
+                    return (
+                      <div key={log.timestamp || index} className="p-3 bg-white border border-slate-200 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="p-1 px-1.5 bg-indigo-50 text-indigo-700 font-mono text-[9px] font-extrabold rounded">
+                              {revIndex}회차 정산
+                            </span>
+                            <span className="text-xs font-bold text-slate-850">
+                              {log.weekStart} ~ {log.weekEnd}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-x-2.5 text-[10px] text-slate-500 font-semibold">
+                            <span>🤵 {spouseAName}: <strong className="text-slate-700 font-bold">+{log.spouseAChoreXp} XP</strong></span>
+                            <span>👰 {spouseBName}: <strong className="text-slate-700 font-bold">+{log.spouseBChoreXp} XP</strong></span>
+                            <span>✨ 총합: <strong className="text-indigo-600 font-black">+{log.thisWeekChoresXpTotal} XP</strong></span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <span className="text-[9px] text-slate-400 font-medium block leading-none mb-0.5">달성률</span>
+                            <span className="text-xs font-black font-mono text-indigo-650 leading-none">{log.completionRate}%</span>
+                          </div>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-serif text-sm font-black text-white ${
+                            log.grade === 'S' ? 'bg-amber-400' :
+                            log.grade === 'A' ? 'bg-indigo-500' :
+                            log.grade === 'B' ? 'bg-emerald-500' :
+                            log.grade === 'C' ? 'bg-blue-400' :
+                            'bg-slate-400'
+                          }`}>
+                            {log.grade}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ➊ 매일 & 수시로 */}
           <div className={`${activeTab === 'all' || activeTab === 'daily' ? 'block' : 'hidden md:block'} print:block`}>

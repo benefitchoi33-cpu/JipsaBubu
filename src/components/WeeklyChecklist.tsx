@@ -123,9 +123,19 @@ export const WeeklyChecklist: React.FC<WeeklyChecklistProps> = ({
                     </div>
 
                     {/* Print marker */}
-                    <span className="hidden print:inline text-xs font-bold text-slate-900 leading-none">
-                      {shouldShowChecked ? (task.completedBy === spouseAName ? `☑(${initialA})` : task.completedBy === spouseBName ? `☑(${initialB})` : '☑') : '□'}
-                    </span>
+                    <div className="hidden print:flex items-center justify-center">
+                      {shouldShowChecked ? (
+                        task.completedBy === spouseAName ? (
+                          <span className="print-check-icon print-check-icon-a">{initialA}</span>
+                        ) : task.completedBy === spouseBName ? (
+                          <span className="print-check-icon print-check-icon-b">{initialB}</span>
+                        ) : (
+                          <span className="print-check-icon bg-slate-800 text-white">✓</span>
+                        )
+                      ) : (
+                        <span className="print-check-icon print-check-icon-empty"></span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-2.5 text-center border-l border-slate-200 no-print">
                     {task.isCustom && (

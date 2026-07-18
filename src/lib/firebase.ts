@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { initializeFirestore, getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 
 // Configuration injected by Firebase Setup
 // To bypass GitHub's static secret scanner alerts, the default API key is constructed dynamically
@@ -15,11 +15,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:854854027061:web:fdd63114cc531576716e7c",
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase safely
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Cloud Firestore using our custom database ID
-const db = getFirestore(app, import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-bc5016c4-4dd2-4d75-885f-ef183a4a05da");
+// Initialize Cloud Firestore using our custom database ID and enable experimentalForceLongPolling
+const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-bc5016c4-4dd2-4d75-885f-ef183a4a05da";
+let db: any;
+try {
+  db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+  }, databaseId);
+} catch (e) {
+  db = getFirestore(app, databaseId);
+}
 
 // House state structure
 export interface HouseState {
@@ -36,6 +44,7 @@ export interface HouseState {
   cumulativeHomeXp: number;
   spouseAOverallXp: number;
   spouseBOverallXp: number;
+  historyLogs?: any[];
   lastUpdatedBy?: string;
   version: number;
 }
